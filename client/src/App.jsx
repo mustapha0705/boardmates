@@ -1,10 +1,11 @@
+import Layout from './components/Layout.jsx'
 import './App.css'
 
 function App() {
 
   return (
     <>
-    <div>Boardmates</div>
+    <Layout />
     </>
   )
 }
