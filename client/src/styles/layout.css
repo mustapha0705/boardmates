@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap");
 :root {
   --color-background-primary: #ffffff;
   --color-background-secondary: #f7f7f7;
@@ -11,7 +12,6 @@
   --color-text-tertiary: #9a9aa8;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap");
   * {
     box-sizing: border-box;
     margin: 0;
