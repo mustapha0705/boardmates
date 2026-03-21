@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import Feed from "../pages/Feed";
 import "../styles/layout.css"
 
 export default function Layout() {

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Sidebar({ collapsed, setCollapsed }) {
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`} id="sidebar">
@@ -33,20 +35,20 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       </div>
 
       <nav className="sb-nav">
-        <a className="nav-item" href="#">
+        <Link className="nav-item" href="/profile">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="8" r="4" />
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
           {!collapsed && <span className="nav-label">Profile</span>}
-        </a>
+        </Link>
 
-        <a className="nav-item active" href="#">
+        <Link className="nav-item active" href="/">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           {!collapsed && <span className="nav-label">Review Feed</span>}
-        </a>
+        </Link>
       </nav>
 
       <div className="sb-footer">
