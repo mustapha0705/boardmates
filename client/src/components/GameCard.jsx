@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function GameCard({ date, title, rating, time }) {
   return (
     <div className="game-card">
@@ -11,7 +13,8 @@ export default function GameCard({ date, title, rating, time }) {
 
         <div>
           <div className="card-date">{date}</div>
-          <div className="card-title">{title}</div>
+          <Link to="/game-detail/1"><div className="card-title">{title}</div></Link>
+          
 
           <div className="card-meta">
             <span className="meta-pill">⭐ {rating}</span>
@@ -21,7 +24,8 @@ export default function GameCard({ date, title, rating, time }) {
         </div>
       </div>
 
-      <button className="review-btn">Start Review →</button>
+      {/* <button className="review-btn">Start Review →</button> */}
+      <Link className="review-btn" to="/review-game/1">Start Review →</Link>
     </div>
   );
 }
