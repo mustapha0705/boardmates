@@ -191,10 +191,6 @@
 }
 
 /* RIGHT */
-/* .right-column {
-  display: flex;
-  flex-direction: column;
-} */
 /* Make the right column fill the grid row and scroll internally */
 .right-column {
   display: flex;
@@ -218,19 +214,6 @@
   width: 100%;
   aspect-ratio: 1;
 }
-
-/* .board-wrapper {
-  width: 368px;
-  height: 368px;
-  max-width: 100%;
-} */
-
-/*CONTROLS FOR CHESSBOARD*/
-/* .board-controls {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-} */
 
 .board-controls {
   display: flex;
@@ -321,14 +304,6 @@
 }
 
 /* COMMENTS */
-/* .comments-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  overflow: hidden;
-} */
 .comments-card {
   display: flex;
   flex-direction: column;
@@ -339,11 +314,6 @@
   overflow: hidden;
 }
 
-/* .comments-body {
-  padding: 15px;
-  flex: 1;
-  overflow-y: auto;
-} */
 .comments-body {
   flex: 1;
   overflow-y: auto;
