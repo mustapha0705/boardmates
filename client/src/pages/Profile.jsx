@@ -20,21 +20,28 @@ const submittedGames = [
 
 const reviews = [
   {
-    title: "Cyber City 2077",
-    text: "Incredible production value. The mechanics are tight and the cyberpunk aesthetic is executed perfectly...",
-    rating: 5,
+    title: "MagnusCarlsen vs. HikaruNakamura",
+    text: "Blitz (3+2)",
     time: "Reviewed 2 days ago",
   },
   {
-    title: "Mechs & Minions",
-    text: "A bit complex for new players, but highly rewarding once you grasp the programming aspect...",
-    rating: 4,
+    title: "AlirezaFirouzja vs. FabianoCaruana",
+    text: "Rapid (15+10)",
+    time: "Reviewed 4 days ago",
+  },
+  {
+    title: "DingLiren vs. IanNepomniachtchi",
+    text: "Classical (90+30)",
     time: "Reviewed 1 week ago",
   },
   {
-    title: "Dungeon Crawler",
-    text: "Found some issues with the rulebook, but the gameplay loop itself is very nostalgic and fun...",
-    rating: 3,
+    title: "LevyRozman vs. GothamFan99",
+    text: "Bullet (1+0)",
+    time: "Reviewed 2 weeks ago",
+  },
+  {
+    title: "JuditPolgar vs. AnishGiri",
+    text: "Rapid (10+5)",
     time: "Reviewed 3 weeks ago",
   },
 ];
@@ -42,114 +49,120 @@ const reviews = [
 export default function Profile() {
   return (
     <div className="feed">
-    <div className="profile-page">
-      <main className="profile-container">
-        {/* Header */}
-        <section className="profile-header">
-          <div
-            className="avatar"
-            style={{
-              backgroundImage:
-                "url(https://lh3.googleusercontent.com/aida-public/AB6AXuA_Ez6-2j81ku8fKQ5t-LsJvBFbPg74TAoikRWMSaB0wTzO0rEKeBXeHz11akiBqEkMU3QTmCdVlEslsNl0SlQLJvZIjAQAbrk7tZzPT-25CUNv-6h-hGbsOxFhQ0kkHtLvFwQ5U0DvVSfhMJ2b5HIhoLINN9UAI3MasZzP3Ay3nBskDnw9YMmTzB9AMmSFPEdHf6_aYKOeSQW5-pETexbYBaOcUs_dI0PCkFiqqzsbUXQ5uxmUCT1K6yHTgRXpKxsN5ekKb5rCuYEB)",
-            }}
-          />
+      <div className="profile-page">
+        <main className="profile-container">
+          {/* Header */}
+          <section className="profile-header">
+            <div
+              className="avatar"
+              style={{
+                backgroundImage:
+                  "url(https://lh3.googleusercontent.com/aida-public/AB6AXuA_Ez6-2j81ku8fKQ5t-LsJvBFbPg74TAoikRWMSaB0wTzO0rEKeBXeHz11akiBqEkMU3QTmCdVlEslsNl0SlQLJvZIjAQAbrk7tZzPT-25CUNv-6h-hGbsOxFhQ0kkHtLvFwQ5U0DvVSfhMJ2b5HIhoLINN9UAI3MasZzP3Ay3nBskDnw9YMmTzB9AMmSFPEdHf6_aYKOeSQW5-pETexbYBaOcUs_dI0PCkFiqqzsbUXQ5uxmUCT1K6yHTgRXpKxsN5ekKb5rCuYEB)",
+              }}
+            />
 
-          <div className="profile-info">
-            <div className="top-row">
-              <div>
-                <h1>AlexRivers</h1>
-                <p className="subtitle">Board Game Enthusiast & Designer</p>
-                <p className="member">
-                  <span className="material-symbols-outlined">
-                    calendar_today
-                  </span>
-                  Member since 2023
-                </p>
-              </div>
-
-              <div className="rating">
-                <h2>4.8</h2>
-                <div className="stars">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <span
-                      key={i}
-                      className="material-symbols-outlined"
-                      style={{
-                        fontVariationSettings: i <= 4 ? '"FILL" 1' : '"FILL" 0',
-                      }}
-                    >
-                      star
-                    </span>
-                  ))}
-                </div>
-                <p>Global Rating</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Sections */}
-        <div className="grid">
-          {/* Submitted */}
-          <div>
-            <div className="section-header">
-              <h2>
-                <span className="material-symbols-outlined">upload_file</span>
-                Games Submitted
-              </h2>
-              <span className="badge">12 Games</span>
-            </div>
-
-            {submittedGames.map((game, i) => (
-              <div className="game-card" key={i}>
-                <img src={game.img} alt="" />
+            <div className="profile-info">
+              <div className="top-row">
                 <div>
-                  <h3>{game.title}</h3>
-                  <p>{game.subtitle}</p>
+                  <h1>AlexRivers</h1>
+                  <p className="subtitle">Board Game Enthusiast & Designer</p>
+                  <p className="member">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Member since 2023
+                  </p>
                 </div>
-                <span className="material-symbols-outlined arrow">
-                  chevron_right
-                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          </section>
 
-          {/* Reviews */}
-          <div>
-            <div className="section-header">
-              <h2>
-                <span className="material-symbols-outlined">rate_review</span>
-                Games Reviewed
-              </h2>
-              <span className="badge">48 Reviews</span>
+          {/* Sections */}
+          <div className="grid">
+            {/* Submitted */}
+            <div>
+              <div className="section-header">
+                <h2>
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Games Submitted
+                </h2>
+                <span className="badge">12 Games</span>
+              </div>
+
+              {submittedGames.map((game, i) => (
+                <div className="game-card" key={i}>
+                  <div>
+                    <h3>{game.title}</h3>
+                    <p>{game.subtitle}</p>
+                  </div>
+                  <svg
+                    className="arrow"
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              ))}
             </div>
 
-            {reviews.map((r, i) => (
-              <div className="review-card" key={i}>
-                <div className="review-top">
-                  <h3>{r.title}</h3>
-                  <div className="stars small">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <span
-                        key={n}
-                        className="material-symbols-outlined"
-                        style={{
-                          fontVariationSettings:
-                            n <= r.rating ? '"FILL" 1' : '"FILL" 0',
-                        }}
-                      >
-                        star
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <p className="review-text">{r.text}</p>
-                <span className="review-time">{r.time}</span>
+            {/* Reviews */}
+            <div>
+              <div className="section-header">
+                <h2>
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Games Reviewed
+                </h2>
+                <span className="badge">48 Reviews</span>
               </div>
-            ))}
+
+              {reviews.map((r, i) => (
+                <div className="review-card" key={i}>
+                  <div className="review-top">
+                    <h3>{r.title}</h3>
+                  </div>
+                  <p className="review-text">{r.text}</p>
+                  <span className="review-time">{r.time}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
-    </div></div>
+        </main>
+      </div>
+    </div>
   );
 }
