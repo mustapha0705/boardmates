@@ -15,7 +15,6 @@ export default function GameReview() {
           <h2 className="review-title">Carlsen vs. Nepomniachtchi</h2>
           <span className="review-subtitle">World Championship 2021 · Game 6</span>
         </div>
-        <button className="btn-secondary">Share</button>
       </div>
 
       <div className="review-grid">
