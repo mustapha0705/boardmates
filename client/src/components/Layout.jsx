@@ -12,7 +12,7 @@ export default function Layout() {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="main">
-        <Topbar />
+        {/* <Topbar /> */}
         <Outlet />
       </div>
     </div>
