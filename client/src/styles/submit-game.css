@@ -180,6 +180,15 @@ textarea {
   appearance: none;
 }
 
+.select-wrapper svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-text-tertiary);
+}
+
 .dropdown-icon {
   position: absolute;
   right: 10px;
