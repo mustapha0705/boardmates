@@ -2,7 +2,7 @@ import { useState } from "react";
 import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
-import "../styles/game-review.css";
+import "../styles/game-detail.css";
 
 export default function GameDetail() {
   const [activeMove, setActiveMove] = useState("Move 45");
@@ -20,7 +20,6 @@ export default function GameDetail() {
         <div className="left-column">
           <ChessBoard activeMove={activeMove} />
           <MoveList activeMove={activeMove} onSelectMove={setActiveMove} />
-          {/* <CommentForm activeMove={activeMove} /> */}
         </div>
         <div className="right-column">
           <CommentList activeMove={activeMove} onSelectMove={setActiveMove} />
