@@ -9,11 +9,6 @@ export default function Login() {
         <div className="login-card">
           {/* Header */}
           <div className="login-header">
-            <div className="logo">
-              <span className="material-symbols-outlined">
-                rocket_launch
-              </span>
-            </div>
             <h2>Welcome back</h2>
             <p>Please enter your details to sign in</p>
           </div>
