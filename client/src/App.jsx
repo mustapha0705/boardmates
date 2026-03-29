@@ -6,6 +6,7 @@ import Profile from "./pages/Profile.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 import ReviewGame from "./pages/ReviewGame.jsx";
 import GameDetail from "./pages/GameDetail.jsx";
+import Login from "./pages/Login.jsx";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="/review-game/:id" element={<ReviewGame />}/>
             <Route path="/game-detail/:id" element={<GameDetail />} />
           </Route>
+          <Route path="/login" element={<Login/>} />
           <Route path="*" element={<PageNotFound />}/>
         </Routes>
       </BrowserRouter>
