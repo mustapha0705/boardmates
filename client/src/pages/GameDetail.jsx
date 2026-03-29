@@ -2,7 +2,6 @@ import { useState } from "react";
 import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
-import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 
 export default function GameDetail() {
