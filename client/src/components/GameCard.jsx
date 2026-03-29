@@ -5,7 +5,14 @@ export default function GameCard({ date, title, rating, time }) {
     <div className="game-card">
       <div className="card-left">
         <div className="card-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="1.5">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#1a1a2e"
+            strokeWidth="1.5"
+          >
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M3 9h18M9 3v18" />
           </svg>
@@ -13,8 +20,9 @@ export default function GameCard({ date, title, rating, time }) {
 
         <div>
           <div className="card-date">{date}</div>
-          <Link to="/game-detail/1"><div className="card-title">{title}</div></Link>
-          
+          <div className="card-title">
+            <Link to="/game-detail/1">{title}</Link>
+          </div>
 
           <div className="card-meta">
             <span className="meta-pill">⭐ {rating}</span>
@@ -25,7 +33,9 @@ export default function GameCard({ date, title, rating, time }) {
       </div>
 
       {/* <button className="review-btn">Start Review →</button> */}
-      <Link className="review-btn" to="/review-game/1">Start Review →</Link>
+      <Link to="/review-game/1" className="review-btn">
+        Start Review →
+      </Link>
     </div>
   );
 }

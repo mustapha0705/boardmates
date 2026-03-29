@@ -1,4 +1,5 @@
 import GameCard from "../components/GameCard.jsx";
+import "../styles/feed.css"
 
 export default function Feed() {
   return (
