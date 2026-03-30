@@ -339,3 +339,8 @@
 }
 
 .footer-links a:hover { color: var(--color-text-secondary); }
+
+@media (max-width: 480px) {
+  .login-card, .signup-card { padding: 20px; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
