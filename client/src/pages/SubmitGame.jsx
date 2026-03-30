@@ -171,7 +171,16 @@ export default function SubmitGame() {
           {/* Comments */}
           <div className="form-group full">
             <label>
-              <span className="material-symbols-outlined">comment</span>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
               What parts of the game should be reviewed? (Optional)
             </label>
             <textarea placeholder="e.g. I'm unsure about the middle-game transition around move 15..." />

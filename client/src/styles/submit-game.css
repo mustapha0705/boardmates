@@ -245,3 +245,13 @@ textarea {
   color: var(--color-text-tertiary);
   margin-top: 10px;
 }
+
+
+@media (max-width: 768px) {
+  .container { padding: 20px 16px; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .login-card, .signup-card { padding: 20px; }
+}
