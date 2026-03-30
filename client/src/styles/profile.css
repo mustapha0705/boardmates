@@ -217,3 +217,12 @@
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
+
+@media (max-width: 768px) {
+  .profile-container { padding: 16px; }
+  .profile-header { flex-direction: column; align-items: center; text-align: center; }
+  .top-row { flex-direction: column; align-items: center; }
+  .rating { text-align: center; }
+  .stars { justify-content: center; }
+  .grid { grid-template-columns: 1fr; }
+}
