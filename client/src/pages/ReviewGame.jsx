@@ -1,4 +1,5 @@
 import useAnalysisTree, { getMoveLabel } from "../hooks/useAnalysisTree";
+import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
@@ -7,6 +8,13 @@ import "../styles/game-review.css";
 
 export default function ReviewGame() {
   const tree = useAnalysisTree();
+
+  useKeyboardNav({
+    onFirst: tree.goToFirst,
+    onPrev: tree.goToPrev,
+    onNext: tree.goToNext,
+    onLast: tree.goToLast,
+  });
 
   return (
     <main className="review-container">
@@ -38,7 +46,6 @@ export default function ReviewGame() {
           <CommentForm
             currentNode={tree.currentNode}
             onSaveComment={tree.setComment}
-            onSetNag={tree.setNag}
           />
         </div>
         <div className="right-column">

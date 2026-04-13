@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { Chess } from "chess.js";
 
 const PIECE_THEME =
@@ -35,13 +35,76 @@ export default function ChessBoard({
   onNext,
   onLast,
   moveLabel,
+  readOnly = false,
 }) {
   const boardElRef = useRef(null);
   const boardRef = useRef(null);
   const propsRef = useRef(null);
   const pendingFenRef = useRef(null);
+  const selectedSquareRef = useRef(null);
 
-  propsRef.current = { fen, onMove };
+  propsRef.current = { fen, onMove, readOnly };
+
+  const clearHighlights = useCallback(() => {
+    const el = boardElRef.current;
+    if (!el) return;
+    el.querySelectorAll(".square-highlight").forEach((sq) =>
+      sq.classList.remove("square-highlight"),
+    );
+  }, []);
+
+  const highlightSquare = useCallback((square) => {
+    const el = boardElRef.current;
+    if (!el) return;
+    const sq = el.querySelector(`[data-square="${square}"]`);
+    if (sq) sq.classList.add("square-highlight");
+  }, []);
+
+  const handleSquareClick = useCallback(
+    (e) => {
+      if (propsRef.current.readOnly) return;
+
+      const squareEl = e.target.closest("[data-square]");
+      if (!squareEl) return;
+
+      const square = squareEl.getAttribute("data-square");
+      const game = new Chess(propsRef.current.fen);
+      if (game.isGameOver()) return;
+
+      if (selectedSquareRef.current) {
+        const from = selectedSquareRef.current;
+        selectedSquareRef.current = null;
+        clearHighlights();
+
+        if (from === square) return;
+
+        const result = propsRef.current.onMove(from, square);
+        if (result) {
+          if (boardRef.current) boardRef.current.position(result.fen, false);
+          return;
+        }
+
+        const piece = game.get(square);
+        if (piece && piece.color === game.turn()) {
+          selectedSquareRef.current = square;
+          highlightSquare(square);
+        }
+      } else {
+        const piece = game.get(square);
+        if (piece && piece.color === game.turn()) {
+          selectedSquareRef.current = square;
+          highlightSquare(square);
+        }
+      }
+    },
+    [clearHighlights, highlightSquare],
+  );
+
+  useEffect(() => {
+    const el = boardElRef.current;
+    el.addEventListener("click", handleSquareClick);
+    return () => el.removeEventListener("click", handleSquareClick);
+  }, [handleSquareClick]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,11 +119,12 @@ export default function ChessBoard({
       if (cancelled) return;
 
       const board = window.Chessboard(boardElRef.current, {
-        draggable: true,
+        draggable: !propsRef.current.readOnly,
         position: propsRef.current.fen,
         pieceTheme: PIECE_THEME,
 
         onDragStart: (_source, piece) => {
+          if (propsRef.current.readOnly) return false;
           const game = new Chess(propsRef.current.fen);
           if (game.isGameOver()) return false;
           if (
@@ -71,6 +135,9 @@ export default function ChessBoard({
         },
 
         onDrop: (source, target) => {
+          if (source === target) return "snapback";
+          selectedSquareRef.current = null;
+          clearHighlights();
           const result = propsRef.current.onMove(source, target);
           if (!result) return "snapback";
           pendingFenRef.current = result.fen;
@@ -96,13 +163,15 @@ export default function ChessBoard({
         boardRef.current = null;
       }
     };
-  }, []);
+  }, [clearHighlights]);
 
   useEffect(() => {
+    selectedSquareRef.current = null;
+    clearHighlights();
     if (boardRef.current) {
       boardRef.current.position(fen, false);
     }
-  }, [fen]);
+  }, [fen, clearHighlights]);
 
   return (
     <div className="board-card">

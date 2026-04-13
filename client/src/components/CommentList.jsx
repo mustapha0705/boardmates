@@ -1,18 +1,10 @@
 import { useState } from "react";
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 
-const NAG_SYMBOLS = {
-  Brilliant: "!!",
-  "Good Move": "!",
-  Inaccuracy: "?!",
-  Mistake: "?",
-  Blunder: "??",
-};
-
-function collectAnnotatedNodes(node) {
+function collectCommentedNodes(node) {
   const result = [];
   function walk(n) {
-    if (n.comment || n.nag) result.push(n);
+    if (n.comment) result.push(n);
     for (const child of n.children) walk(child);
   }
   walk(node);
@@ -23,12 +15,12 @@ function collectAnnotatedNodes(node) {
 export default function CommentList({ root, currentNode, onSelectNode }) {
   const [search, setSearch] = useState("");
 
-  const annotated = collectAnnotatedNodes(root);
+  const commented = collectCommentedNodes(root);
 
-  const filtered = annotated.filter((node) => {
+  const filtered = commented.filter((node) => {
     const q = search.toLowerCase();
     const label = getMoveLabel(node).toLowerCase();
-    const text = (node.comment || "").toLowerCase();
+    const text = node.comment.toLowerCase();
     return label.includes(q) || text.includes(q);
   });
 
@@ -36,14 +28,14 @@ export default function CommentList({ root, currentNode, onSelectNode }) {
     <div className="comments-card">
       <div className="comments-header">
         <span>Reviewer Notes</span>
-        <span className="comments-count">{annotated.length}</span>
+        <span className="comments-count">{commented.length}</span>
       </div>
 
       <div className="comments-body">
         {filtered.length === 0 ? (
           <div className="move-empty">
-            {annotated.length === 0
-              ? "No annotations yet. Select a move and add a comment."
+            {commented.length === 0
+              ? "No comments yet. Select a move and add a comment."
               : "No results match your search."}
           </div>
         ) : (
@@ -59,12 +51,9 @@ export default function CommentList({ root, currentNode, onSelectNode }) {
                 <div className="comment-meta">
                   <span className={`tag ${isActive ? "" : "muted"}`}>
                     {label}
-                    {node.nag ? ` ${NAG_SYMBOLS[node.nag] || ""}` : ""}
                   </span>
                 </div>
-                {node.comment && (
-                  <p className="comment-text">{node.comment}</p>
-                )}
+                <p className="comment-text">{node.comment}</p>
               </div>
             );
           })

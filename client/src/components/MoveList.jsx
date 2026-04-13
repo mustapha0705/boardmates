@@ -1,29 +1,19 @@
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 
-const NAG_SYMBOLS = {
-  Brilliant: "!!",
-  "Good Move": "!",
-  Inaccuracy: "?!",
-  Mistake: "?",
-  Blunder: "??",
-};
-
 export default function MoveList({ root, currentNode, onSelectNode }) {
   function cell(node) {
     const isActive = currentNode.id === node.id;
-    const hasAnnotation = node.comment || node.nag;
     return (
       <span
         key={`c-${node.id}`}
         className={
           "move-cell" +
           (isActive ? " active-move" : "") +
-          (hasAnnotation ? " has-comment" : "")
+          (node.comment ? " has-comment" : "")
         }
         onClick={() => onSelectNode(node)}
       >
         {node.san}
-        {node.nag && <span className="nag"> {NAG_SYMBOLS[node.nag]}</span>}
       </span>
     );
   }

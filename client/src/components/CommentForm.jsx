@@ -1,27 +1,20 @@
 import { useState, useEffect } from "react";
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 
-const TAGS = ["Good Move", "Mistake", "Blunder", "Brilliant", "Inaccuracy"];
-
-export default function CommentForm({ currentNode, onSaveComment, onSetNag }) {
+export default function CommentForm({ currentNode, onSaveComment }) {
   const [text, setText] = useState("");
-  const [selectedTag, setSelectedTag] = useState(null);
 
   useEffect(() => {
     setText(currentNode.comment || "");
-    setSelectedTag(currentNode.nag || null);
   }, [currentNode]);
 
   function handleSave() {
     onSaveComment(text.trim());
-    onSetNag(selectedTag);
   }
 
   function handleClear() {
     setText("");
-    setSelectedTag(null);
     onSaveComment("");
-    onSetNag(null);
   }
 
   const label = getMoveLabel(currentNode);
@@ -30,18 +23,6 @@ export default function CommentForm({ currentNode, onSaveComment, onSetNag }) {
     <div className="card">
       <div className="comment-form-header">
         <h3 className="annotate-title">Annotate {label}</h3>
-      </div>
-
-      <div className="tag-row">
-        {TAGS.map((tag) => (
-          <button
-            key={tag}
-            className={`tag-chip ${selectedTag === tag ? "selected" : ""}`}
-            onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-          >
-            {tag}
-          </button>
-        ))}
       </div>
 
       <textarea
@@ -58,7 +39,7 @@ export default function CommentForm({ currentNode, onSaveComment, onSetNag }) {
         </button>
         <button
           className="btn-primary"
-          disabled={!text.trim() && !selectedTag}
+          disabled={!text.trim()}
           onClick={handleSave}
         >
           Save Comment

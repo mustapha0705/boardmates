@@ -10,7 +10,6 @@ function createNode(fen, san = null, parent = null) {
     san,
     ply: parent ? parent.ply + 1 : 0,
     comment: "",
-    nag: null,
     parent,
     children: [],
   };
@@ -85,11 +84,6 @@ export default function useAnalysisTree(startFen) {
     bump();
   }, []);
 
-  const setNag = useCallback((nag) => {
-    currentRef.current.nag = nag;
-    bump();
-  }, []);
-
   return {
     root,
     currentNode,
@@ -100,6 +94,5 @@ export default function useAnalysisTree(startFen) {
     goToNext,
     goToLast,
     setComment,
-    setNag,
   };
 }
