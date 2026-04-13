@@ -464,6 +464,77 @@
   align-self: flex-start;
 }
 
+/* Header actions row */
+.review-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Complete Review button */
+.complete-review-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #065f46;
+  color: #d1fae5;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.complete-review-btn:hover {
+  background: #047857;
+}
+
+/* Confirmation inline */
+.complete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.confirm-text {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.confirm-yes-btn {
+  background: #065f46;
+  color: #d1fae5;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.confirm-yes-btn:hover { background: #047857; }
+.confirm-no-btn {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-family: "DM Sans", sans-serif;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+.confirm-no-btn:hover {
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
 @media (max-width: 1024px) {
   .review-grid { grid-template-columns: 1fr; }
   .right-column {
@@ -477,6 +548,8 @@
 @media (max-width: 768px) {
   .review-container { padding: 16px; }
   .review-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+  .review-header-actions { flex-wrap: wrap; }
+  .complete-confirm { flex-wrap: wrap; }
   .review-notes-card { padding: 12px 14px; }
   .review-notes-header { font-size: 12px; }
   .review-notes-text { font-size: 13px; }

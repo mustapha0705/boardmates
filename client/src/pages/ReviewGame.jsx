@@ -1,5 +1,6 @@
-import { useParams } from "react-router-dom";
-import { useGames } from "../context/GameContext";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useGames, CURRENT_USER } from "../context/GameContext";
 import useAnalysisTree, { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
@@ -8,8 +9,9 @@ import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 
-function ReviewGameInner({ game }) {
+function ReviewGameInner({ game, onCompleteReview }) {
   const tree = useAnalysisTree(null, game?.pgn);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useKeyboardNav({
     onFirst: tree.goToFirst,
@@ -23,6 +25,9 @@ function ReviewGameInner({ game }) {
     ? `${game.timeControl} · Submitted by ${game.author}`
     : "";
 
+  const isInReview = game?.status === "in_review";
+  const isMyReview = game?.reviewer === CURRENT_USER;
+
   return (
     <main className="review-container">
       <div className="review-header">
@@ -32,9 +37,39 @@ function ReviewGameInner({ game }) {
             <span className="review-subtitle">{subtitle}</span>
           )}
         </div>
-        {game?.averageRating && (
-          <span className="rating-badge">⭐ {game.averageRating} avg</span>
-        )}
+        <div className="review-header-actions">
+          {game?.averageRating && (
+            <span className="rating-badge">⭐ {game.averageRating} avg</span>
+          )}
+          {isInReview && isMyReview && !showConfirm && (
+            <button
+              className="complete-review-btn"
+              onClick={() => setShowConfirm(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Complete Review
+            </button>
+          )}
+          {isInReview && isMyReview && showConfirm && (
+            <div className="complete-confirm">
+              <span className="confirm-text">Mark as completed?</span>
+              <button
+                className="confirm-yes-btn"
+                onClick={onCompleteReview}
+              >
+                Yes, finish
+              </button>
+              <button
+                className="confirm-no-btn"
+                onClick={() => setShowConfirm(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {game?.reviewNotes && (
@@ -91,8 +126,21 @@ function ReviewGameInner({ game }) {
 
 export default function ReviewGame() {
   const { id } = useParams();
-  const { getGame } = useGames();
+  const navigate = useNavigate();
+  const { getGame, updateGame } = useGames();
   const game = getGame(id);
 
-  return <ReviewGameInner key={id} game={game} />;
+  function handleCompleteReview() {
+    if (!game) return;
+    updateGame(game.id, { status: "completed" });
+    navigate("/");
+  }
+
+  return (
+    <ReviewGameInner
+      key={id}
+      game={game}
+      onCompleteReview={handleCompleteReview}
+    />
+  );
 }
