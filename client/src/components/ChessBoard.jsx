@@ -60,51 +60,29 @@ export default function ChessBoard({
     if (sq) sq.classList.add("square-highlight");
   }, []);
 
-  const handleSquareClick = useCallback(
-    (e) => {
-      if (propsRef.current.readOnly) return;
+  useEffect(() => {
+    const el = boardElRef.current;
+
+    function handleEmptySquarePointerDown(e) {
+      if (propsRef.current.readOnly || !selectedSquareRef.current) return;
 
       const squareEl = e.target.closest("[data-square]");
       if (!squareEl) return;
 
       const square = squareEl.getAttribute("data-square");
       const game = new Chess(propsRef.current.fen);
-      if (game.isGameOver()) return;
+      if (game.get(square)) return;
 
-      if (selectedSquareRef.current) {
-        const from = selectedSquareRef.current;
-        selectedSquareRef.current = null;
-        clearHighlights();
+      const from = selectedSquareRef.current;
+      selectedSquareRef.current = null;
+      clearHighlights();
+      propsRef.current.onMove(from, square);
+    }
 
-        if (from === square) return;
-
-        const result = propsRef.current.onMove(from, square);
-        if (result) {
-          if (boardRef.current) boardRef.current.position(result.fen, false);
-          return;
-        }
-
-        const piece = game.get(square);
-        if (piece && piece.color === game.turn()) {
-          selectedSquareRef.current = square;
-          highlightSquare(square);
-        }
-      } else {
-        const piece = game.get(square);
-        if (piece && piece.color === game.turn()) {
-          selectedSquareRef.current = square;
-          highlightSquare(square);
-        }
-      }
-    },
-    [clearHighlights, highlightSquare],
-  );
-
-  useEffect(() => {
-    const el = boardElRef.current;
-    el.addEventListener("click", handleSquareClick);
-    return () => el.removeEventListener("click", handleSquareClick);
-  }, [handleSquareClick]);
+    el.addEventListener("pointerdown", handleEmptySquarePointerDown);
+    return () =>
+      el.removeEventListener("pointerdown", handleEmptySquarePointerDown);
+  }, [clearHighlights]);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,15 +101,45 @@ export default function ChessBoard({
         position: propsRef.current.fen,
         pieceTheme: PIECE_THEME,
 
-        onDragStart: (_source, piece) => {
+        onDragStart: (source, piece) => {
           if (propsRef.current.readOnly) return false;
           const game = new Chess(propsRef.current.fen);
           if (game.isGameOver()) return false;
-          if (
-            (game.turn() === "w" && piece.startsWith("b")) ||
-            (game.turn() === "b" && piece.startsWith("w"))
-          )
-            return false;
+
+          const isOwnPiece =
+            (game.turn() === "w" && piece.startsWith("w")) ||
+            (game.turn() === "b" && piece.startsWith("b"));
+
+          if (selectedSquareRef.current) {
+            const from = selectedSquareRef.current;
+
+            if (from === source) {
+              selectedSquareRef.current = null;
+              clearHighlights();
+              return false;
+            }
+
+            const result = propsRef.current.onMove(from, source);
+            if (result) {
+              selectedSquareRef.current = null;
+              clearHighlights();
+              return false;
+            }
+
+            selectedSquareRef.current = null;
+            clearHighlights();
+            if (isOwnPiece) {
+              selectedSquareRef.current = source;
+              highlightSquare(source);
+            }
+            return isOwnPiece ? undefined : false;
+          }
+
+          if (!isOwnPiece) return false;
+
+          selectedSquareRef.current = source;
+          clearHighlights();
+          highlightSquare(source);
         },
 
         onDrop: (source, target) => {
@@ -163,7 +171,7 @@ export default function ChessBoard({
         boardRef.current = null;
       }
     };
-  }, [clearHighlights]);
+  }, [clearHighlights, highlightSquare]);
 
   useEffect(() => {
     selectedSquareRef.current = null;
