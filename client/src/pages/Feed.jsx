@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import MOCK_GAMES, { CURRENT_USER } from "../data/mockFeed";
+import { useGames, CURRENT_USER } from "../context/GameContext";
 import GameCard from "../components/GameCard.jsx";
 import "../styles/feed.css";
 
@@ -8,26 +8,16 @@ const PAGE_SIZE = 6;
 
 export default function Feed() {
   const navigate = useNavigate();
-  const [games, setGames] = useState(() =>
-    [...MOCK_GAMES].sort(
-      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
-    ),
-  );
+  const { games, updateGame } = useGames();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef(null);
 
   const handleStartReview = useCallback(
     (id) => {
-      setGames((prev) =>
-        prev.map((g) =>
-          g.id === id
-            ? { ...g, status: "in_review", reviewer: CURRENT_USER }
-            : g,
-        ),
-      );
+      updateGame(id, { status: "in_review", reviewer: CURRENT_USER });
       navigate(`/review-game/${id}`);
     },
-    [navigate],
+    [navigate, updateGame],
   );
 
   const visible = games.slice(0, visibleCount);

@@ -22,10 +22,28 @@ export function getMoveLabel(node) {
   return `${num}${dot} ${node.san}`;
 }
 
-export default function useAnalysisTree(startFen) {
+export default function useAnalysisTree(startFen, initialPgn) {
   const rootRef = useRef(null);
   if (!rootRef.current) {
     rootRef.current = createNode(startFen || new Chess().fen());
+
+    if (initialPgn) {
+      try {
+        const game = new Chess();
+        game.loadPgn(initialPgn);
+        const moves = game.history({ verbose: true });
+        let current = rootRef.current;
+        const replay = new Chess(rootRef.current.fen);
+        for (const move of moves) {
+          replay.move(move.san);
+          const child = createNode(replay.fen(), move.san, current);
+          current.children.push(child);
+          current = child;
+        }
+      } catch {
+        // Invalid PGN — start with empty board
+      }
+    }
   }
   const root = rootRef.current;
 

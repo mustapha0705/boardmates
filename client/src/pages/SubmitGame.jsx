@@ -1,26 +1,162 @@
-import React, { useState } from "react";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Chess } from "chess.js";
+import { useGames, CURRENT_USER } from "../context/GameContext";
 import "../styles/submit-game.css";
 
+const TIME_CONTROL_LABELS = {
+  bullet: "1+0",
+  blitz: "5+3",
+  rapid: "10+5",
+  classical: "30m",
+  daily: "1d",
+};
+
+const OPENING_NAMES = [
+  "Sicilian Najdorf Battle",
+  "Queen's Gambit Encounter",
+  "King's Indian Clash",
+  "London System Grind",
+  "Italian Game Study",
+  "Caro-Kann Defense",
+  "Ruy Lopez Exchange",
+  "French Defense Struggle",
+  "Catalan Opening Adventure",
+  "Scandinavian Defense Play",
+  "Nimzo-Indian Classical",
+  "Dutch Defense Gambit",
+  "English Opening Sideline",
+  "Benoni Counterattack",
+  "Pirc Defense Encounter",
+  "Grünfeld Exchange",
+  "Slav Defense Encounter",
+  "Alekhine Defense Study",
+  "Bird's Opening Surprise",
+  "Philidor Defense Battle",
+];
+
+function generateTitle(headers) {
+  if (headers.Event && headers.Event !== "?") return headers.Event;
+  if (
+    headers.White &&
+    headers.Black &&
+    headers.White !== "?" &&
+    headers.Black !== "?"
+  ) {
+    return `${headers.White} vs. ${headers.Black}`;
+  }
+  return OPENING_NAMES[Math.floor(Math.random() * OPENING_NAMES.length)];
+}
+
 export default function SubmitGame() {
+  const navigate = useNavigate();
+  const { addGame } = useGames();
+
   const [activeTab, setActiveTab] = useState("upload");
   const [pgnText, setPgnText] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileContent, setFileContent] = useState("");
+  const [averageRating, setAverageRating] = useState("1200");
+  const [timeControl, setTimeControl] = useState("blitz");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFileName(file.name);
+    setError("");
+
+    const reader = new FileReader();
+    reader.onload = (evt) => setFileContent(evt.target.result);
+    reader.onerror = () => setError("Failed to read file. Please try again.");
+    reader.readAsText(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".pgn")) {
+      setError("Please drop a .pgn file.");
+      return;
+    }
+    setFileName(file.name);
+    setError("");
+    const reader = new FileReader();
+    reader.onload = (evt) => setFileContent(evt.target.result);
+    reader.readAsText(file);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+  }
+
+  function handleSubmit() {
+    const pgn = activeTab === "paste" ? pgnText.trim() : fileContent.trim();
+
+    if (!pgn) {
+      setError(
+        activeTab === "paste"
+          ? "Please paste a PGN."
+          : "Please upload a PGN file.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    const chess = new Chess();
+    let headers = {};
+
+    try {
+      chess.loadPgn(pgn);
+      headers = chess.header() || {};
+    } catch {
+      // PGN may have issues but we still allow submission
+    }
+
+    const title = generateTitle(headers);
+    const tc = TIME_CONTROL_LABELS[timeControl] || timeControl;
+
+    addGame({
+      title,
+      pgn,
+      submittedAt: new Date().toISOString(),
+      timeControl: tc,
+      status: "pending",
+      reviewer: null,
+      author: CURRENT_USER,
+      averageRating: Number(averageRating) || 1200,
+      reviewNotes: reviewNotes.trim() || null,
+    });
+
+    setSubmitting(false);
+    navigate("/");
+  }
 
   return (
     <div className="feed">
       <div className="page">
         <main className="container">
-          {/* Title */}
           <div className="title-section">
             <h1>Submit a Game</h1>
             <p>Share your chess match for analysis or community review.</p>
           </div>
 
-          {/* Tabs */}
+          {error && <div className="submit-error">{error}</div>}
+
           <div className="card">
             <div className="tabs">
               <button
                 className={`tab ${activeTab === "upload" ? "active" : ""}`}
-                onClick={() => setActiveTab("upload")}
+                onClick={() => {
+                  setActiveTab("upload");
+                  setError("");
+                }}
               >
                 <svg
                   width="15"
@@ -40,7 +176,10 @@ export default function SubmitGame() {
 
               <button
                 className={`tab ${activeTab === "paste" ? "active" : ""}`}
-                onClick={() => setActiveTab("paste")}
+                onClick={() => {
+                  setActiveTab("paste");
+                  setError("");
+                }}
               >
                 <svg
                   width="15"
@@ -59,10 +198,13 @@ export default function SubmitGame() {
               </button>
             </div>
 
-            {/* Tab Content */}
             <div className="upload-area">
               {activeTab === "upload" && (
-                <div className="upload-box">
+                <div
+                  className="upload-box"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
                   <div className="upload-icon">
                     <svg
                       width="40"
@@ -79,17 +221,32 @@ export default function SubmitGame() {
                   </div>
 
                   <div className="upload-text">
-                    <p className="bold">Drag and drop PGN file</p>
-                    <p>or click to browse from your computer</p>
+                    {fileName ? (
+                      <>
+                        <p className="bold file-name">{fileName}</p>
+                        <p>File loaded successfully</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="bold">Drag and drop PGN file</p>
+                        <p>or click to browse from your computer</p>
+                      </>
+                    )}
                   </div>
 
-                  <input type="file" accept=".pgn" id="fileInput" hidden />
+                  <input
+                    type="file"
+                    accept=".pgn"
+                    ref={fileInputRef}
+                    hidden
+                    onChange={handleFileChange}
+                  />
 
                   <button
                     className="secondary-btn"
-                    onClick={() => document.getElementById("fileInput").click()}
+                    onClick={() => fileInputRef.current.click()}
                   >
-                    Select File
+                    {fileName ? "Change File" : "Select File"}
                   </button>
                 </div>
               )}
@@ -98,16 +255,18 @@ export default function SubmitGame() {
                 <div className="paste-box">
                   <textarea
                     className="pgn-textarea"
-                    placeholder="Paste your PGN here..."
+                    placeholder={`Paste your PGN here...\n\ne.g.\n[Event "Casual Game"]\n[White "Player1"]\n[Black "Player2"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bb5 a6`}
                     value={pgnText}
-                    onChange={(e) => setPgnText(e.target.value)}
+                    onChange={(e) => {
+                      setPgnText(e.target.value);
+                      setError("");
+                    }}
                   />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Form */}
           <div className="form-grid">
             <div className="form-group">
               <label>
@@ -127,7 +286,8 @@ export default function SubmitGame() {
               <input
                 type="number"
                 placeholder="e.g. 1500"
-                defaultValue="1200"
+                value={averageRating}
+                onChange={(e) => setAverageRating(e.target.value)}
               />
             </div>
 
@@ -147,7 +307,10 @@ export default function SubmitGame() {
                 Time Control
               </label>
               <div className="select-wrapper">
-                <select defaultValue="blitz">
+                <select
+                  value={timeControl}
+                  onChange={(e) => setTimeControl(e.target.value)}
+                >
                   <option value="bullet">Bullet (1 min)</option>
                   <option value="blitz">Blitz (3-5 min)</option>
                   <option value="rapid">Rapid (10-30 min)</option>
@@ -168,7 +331,6 @@ export default function SubmitGame() {
             </div>
           </div>
 
-          {/* Comments */}
           <div className="form-group full">
             <label>
               <svg
@@ -183,14 +345,21 @@ export default function SubmitGame() {
               </svg>
               What parts of the game should be reviewed? (Optional)
             </label>
-            <textarea placeholder="e.g. I'm unsure about the middle-game transition around move 15..." />
+            <textarea
+              placeholder="e.g. I'm unsure about the middle-game transition around move 15..."
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+            />
           </div>
 
-          {/* Submit */}
           <div className="submit-section">
-            <button className="primary-btn">
+            <button
+              className="primary-btn"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
               <span className="material-symbols-outlined">send</span>
-              Submit for Review
+              {submitting ? "Submitting..." : "Submit for Review"}
             </button>
             <p className="disclaimer">
               By submitting, you agree to our community guidelines and analysis

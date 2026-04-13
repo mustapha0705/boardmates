@@ -78,6 +78,12 @@ export default function GameCard({ game, currentUser, onStartReview }) {
             <span className="meta-pill">⏱ {timeControl}</span>
             <span className="dot" />
             <span className="meta-pill">by {author}</span>
+            {game.averageRating && (
+              <>
+                <span className="dot" />
+                <span className="meta-pill">⭐ {game.averageRating}</span>
+              </>
+            )}
             {reviewer && (
               <>
                 <span className="dot" />

@@ -1,3 +1,5 @@
+import { useParams } from "react-router-dom";
+import { useGames } from "../context/GameContext";
 import useAnalysisTree, { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
@@ -6,8 +8,8 @@ import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 
-export default function ReviewGame() {
-  const tree = useAnalysisTree();
+function ReviewGameInner({ game }) {
+  const tree = useAnalysisTree(null, game?.pgn);
 
   useKeyboardNav({
     onFirst: tree.goToFirst,
@@ -16,16 +18,43 @@ export default function ReviewGame() {
     onLast: tree.goToLast,
   });
 
+  const title = game?.title || "Game Review";
+  const subtitle = game
+    ? `${game.timeControl} · Submitted by ${game.author}`
+    : "";
+
   return (
     <main className="review-container">
       <div className="review-header">
         <div>
-          <h2 className="review-title">Carlsen vs. Nepomniachtchi</h2>
-          <span className="review-subtitle">
-            World Championship 2021 · Game 6
-          </span>
+          <h2 className="review-title">{title}</h2>
+          {subtitle && (
+            <span className="review-subtitle">{subtitle}</span>
+          )}
         </div>
+        {game?.averageRating && (
+          <span className="rating-badge">⭐ {game.averageRating} avg</span>
+        )}
       </div>
+
+      {game?.reviewNotes && (
+        <div className="review-notes-card">
+          <div className="review-notes-header">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Submitter&rsquo;s Review Request
+          </div>
+          <p className="review-notes-text">{game.reviewNotes}</p>
+        </div>
+      )}
 
       <div className="review-grid">
         <div className="left-column">
@@ -58,4 +87,12 @@ export default function ReviewGame() {
       </div>
     </main>
   );
+}
+
+export default function ReviewGame() {
+  const { id } = useParams();
+  const { getGame } = useGames();
+  const game = getGame(id);
+
+  return <ReviewGameInner key={id} game={game} />;
 }
