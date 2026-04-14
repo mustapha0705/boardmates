@@ -188,22 +188,22 @@ export default function ChessBoard({
       </div>
 
       <div className="board-controls">
-        <button className="ctrl-btn" title="First move" onClick={onFirst}>
+        <button type="button" className="ctrl-btn" title="First move" aria-label="First move" onClick={onFirst}>
           <SkipBack />
         </button>
-        <button className="ctrl-btn" title="Previous move" onClick={onPrev}>
+        <button type="button" className="ctrl-btn" title="Previous move" aria-label="Previous move" onClick={onPrev}>
           <StepBack />
         </button>
 
         <div className="move-indicator">
-          <span className="move-dot" />
+          <span className="move-dot" aria-hidden="true" />
           {moveLabel}
         </div>
 
-        <button className="ctrl-btn" title="Next move" onClick={onNext}>
+        <button type="button" className="ctrl-btn" title="Next move" aria-label="Next move" onClick={onNext}>
           <StepForward />
         </button>
-        <button className="ctrl-btn" title="Last move" onClick={onLast}>
+        <button type="button" className="ctrl-btn" title="Last move" aria-label="Last move" onClick={onLast}>
           <SkipForward />
         </button>
       </div>

@@ -1,18 +1,6 @@
 import { Link } from "react-router-dom";
-
-const STATUS_CONFIG = {
-  pending: { label: "Pending", className: "badge-pending" },
-  in_review: { label: "In Review", className: "badge-in-review" },
-  completed: { label: "Completed", className: "badge-completed" },
-};
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import { STATUS_CONFIG } from "../constants/gameStatus";
+import { formatDate } from "../utils/time";
 
 export default function GameCard({ game, currentUser, onStartReview }) {
   const { id, title, submittedAt, timeControl, status, reviewer, author } =
@@ -23,7 +11,11 @@ export default function GameCard({ game, currentUser, onStartReview }) {
   let cta;
   if (status === "pending") {
     cta = (
-      <button className="review-btn" onClick={() => onStartReview(id)}>
+      <button
+        type="button"
+        className="review-btn"
+        onClick={() => onStartReview(id)}
+      >
         Start Review →
       </button>
     );
@@ -50,7 +42,7 @@ export default function GameCard({ game, currentUser, onStartReview }) {
   return (
     <div className="game-card">
       <div className="card-left">
-        <div className="card-icon">
+        <div className="card-icon" aria-hidden="true">
           <svg
             width="20"
             height="20"

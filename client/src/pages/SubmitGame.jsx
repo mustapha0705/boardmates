@@ -358,7 +358,7 @@ export default function SubmitGame() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              <span className="material-symbols-outlined">send</span>
+              <svg xmlns="http://w3.org" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
               {submitting ? "Submitting..." : "Submit for Review"}
             </button>
             <p className="disclaimer">

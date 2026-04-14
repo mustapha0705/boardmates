@@ -6,6 +6,7 @@
   --color-background-tertiary: #f3f3f3;
   --color-border-tertiary: #e6e6e6;
   --color-border-secondary: #d9d9d9;
+  --color-border-primary: #cccccc;
   --color-text-primary: #1a1a2e;
   --color-text-secondary: #6b6b7a;
   --color-text-tertiary: #9a9aa8;
@@ -227,6 +228,15 @@
   border-color: var(--color-border-secondary);
   color: var(--color-text-primary);
 }
+/* ── Responsive utility classes ── */
+.mobile-only { display: none; }
+.desktop-only { display: initial; }
+
+@media (max-width: 768px) {
+  .mobile-only { display: initial; }
+  .desktop-only { display: none; }
+}
+
 @media (min-width: 769px) {
   .topbar { display: none; }
 }

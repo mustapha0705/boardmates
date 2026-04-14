@@ -1,37 +1,12 @@
 import { Link } from "react-router-dom";
 import { useGames, CURRENT_USER } from "../context/GameContext";
+import { STATUS_CONFIG } from "../constants/gameStatus";
+import { timeAgo } from "../utils/time";
 import "../styles/profile.css";
 
 function getInitial(name) {
   return name ? name.charAt(0).toUpperCase() : "?";
 }
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function timeAgo(iso) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks}w ago`;
-  return formatDate(iso);
-}
-
-const STATUS_CONFIG = {
-  pending: { label: "Pending", className: "profile-badge-pending" },
-  in_review: { label: "In Review", className: "profile-badge-in-review" },
-  completed: { label: "Completed", className: "profile-badge-completed" },
-};
 
 export default function Profile() {
   const { games } = useGames();
@@ -66,6 +41,7 @@ export default function Profile() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
+                      aria-hidden="true"
                     >
                       <rect x="3" y="4" width="18" height="18" rx="2" />
                       <line x1="16" y1="2" x2="16" y2="6" />
@@ -97,18 +73,10 @@ export default function Profile() {
           </section>
 
           <div className="grid">
-            {/* Games Submitted */}
             <div>
               <div className="section-header">
                 <h2>
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
@@ -156,18 +124,10 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Games Reviewed */}
             <div>
               <div className="section-header">
                 <h2>
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                   Games Reviewed
@@ -211,14 +171,7 @@ export default function Profile() {
                 <>
                   <div className="section-header" style={{ marginTop: 20 }}>
                     <h2>
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>

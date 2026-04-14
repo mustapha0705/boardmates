@@ -11,6 +11,30 @@
   color: var(--color-text-tertiary);
 }
 
+/* Reviewer badge (used in GameDetail) */
+.reviewer-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 20px;
+  padding: 5px 14px;
+  height: fit-content;
+  white-space: nowrap;
+}
+
+.reviewer-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+
 /* Comments card */
 .comments-header {
   display: flex;
@@ -360,70 +384,6 @@
   font-size: 12px;
   font-weight: 400;
   color: var(--color-text-tertiary);
-}
-
-/* COMMENTS */
-.comments-card {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0; /* same reason — without this, overflow: auto won't kick in */
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.comments-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 12px;
-  min-height: 0;
-}
-
-.comment {
-  margin-bottom: 15px;
-}
-
-.comment.active {
-  border-left: 3px solid #137fec;
-  padding-left: 10px;
-}
-
-.tag {
-  font-size: 12px;
-  font-weight: bold;
-  color: #137fec;
-}
-
-.tag.muted {
-  color: #999;
-}
-
-/* SEARCH */
-.comment-search {
-  padding: 10px;
-  border-top: 1px solid #eee;
-}
-
-.comment-search input {
-  width: 100%;
-  padding: 8px;
-}
-
-/* BUTTONS */
-.btn-primary {
-  background: #137fec;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-}
-
-.btn-secondary {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 8px 16px;
-  border-radius: 6px;
 }
 
 /* Review notes from submitter */
