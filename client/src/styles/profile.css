@@ -9,7 +9,7 @@
   padding: 28px 32px;
 }
 
-/* Header */
+/* ── Header ── */
 .profile-header {
   display: flex;
   gap: 24px;
@@ -21,14 +21,23 @@
   margin-bottom: 20px;
 }
 
-.avatar {
+/* Initial-based avatar */
+.avatar-circle {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background-size: cover;
-  background-position: center;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  border: 0.5px solid var(--color-border-tertiary);
+}
+.avatar-circle span {
+  font-family: "DM Serif Display", serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: #f0ede4;
+  line-height: 1;
 }
 
 .profile-info {
@@ -65,56 +74,50 @@
   gap: 5px;
 }
 
-/* Rating block */
-.rating {
-  text-align: right;
-  flex-shrink: 0;
+/* ── Stats row ── */
+.profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 0.5px solid var(--color-border-tertiary);
 }
-
-.rating h2 {
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.stat-number {
   font-family: "DM Serif Display", serif;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 400;
   color: var(--color-text-primary);
-  margin: 0;
   line-height: 1;
 }
-
-.stars {
-  display: flex;
-  gap: 2px;
-  justify-content: flex-end;
-  margin: 4px 0 3px;
-  color: #1a1a2e;
-}
-
-.stars .material-symbols-outlined {
-  font-size: 14px;
-}
-
-.stars.small .material-symbols-outlined {
-  font-size: 13px;
-}
-
-.rating p {
-  font-size: 11px;
+.stat-label {
+  font-size: 11.5px;
   color: var(--color-text-tertiary);
-  margin: 0;
+}
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--color-border-tertiary);
 }
 
-/* Grid */
+/* ── Grid ── */
 .grid {
   display: grid;
   gap: 20px;
 }
-
 @media (min-width: 768px) {
   .grid {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-/* Section header */
+/* ── Section header ── */
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -131,11 +134,6 @@
   gap: 6px;
 }
 
-.section-header h2 .material-symbols-outlined {
-  font-size: 15px;
-  color: var(--color-text-secondary);
-}
-
 .badge {
   background: var(--color-background-secondary);
   border: 0.5px solid var(--color-border-tertiary);
@@ -145,84 +143,190 @@
   color: var(--color-text-secondary);
 }
 
-/* Game card */
-.game-card {
+/* ── Empty state ── */
+.empty-state {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 10px;
+  padding: 24px 16px;
+  text-align: center;
+}
+.empty-state p {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  margin: 0 0 10px;
+}
+.empty-cta {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a2e;
+  text-decoration: none;
+}
+.empty-cta:hover {
+  text-decoration: underline;
+}
+
+/* ── Submitted game card ── */
+.profile-game-card {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   background: var(--color-background-primary);
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  cursor: pointer;
+  text-decoration: none;
   transition: border-color 0.15s;
 }
-
-.game-card:hover {
+.profile-game-card:hover {
   border-color: var(--color-border-secondary);
 }
 
-.game-card h3 {
+.profile-game-info {
+  min-width: 0;
+}
+.profile-game-info h3 {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--color-text-primary);
-  margin: 0 0 2px;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.game-card p {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  margin: 0;
+.profile-game-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.arrow {
-  margin-left: auto;
+.profile-meta-pill {
+  background: var(--color-background-secondary);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.profile-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+.profile-badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.profile-badge-in-review {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.profile-badge-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.profile-game-date {
+  font-size: 11px;
   color: var(--color-text-tertiary);
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* Review card */
-.review-card {
+/* ── Review card ── */
+.profile-review-card {
+  display: block;
   background: var(--color-background-primary);
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: 10px;
   padding: 13px 14px;
   margin-bottom: 8px;
-  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.profile-review-card:hover {
+  border-color: var(--color-border-secondary);
+}
+.profile-review-card.in-progress {
+  border-left: 3px solid #3b82f6;
 }
 
-.review-top {
+.profile-review-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+  gap: 8px;
 }
-
-.review-top h3 {
+.profile-review-top h3 {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--color-text-primary);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-
-.review-text {
-  font-size: 13px;
+.profile-review-tc {
+  background: var(--color-background-secondary);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 11px;
   color: var(--color-text-secondary);
-  line-height: 1.5;
-  margin: 0 0 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.review-time {
+.profile-review-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.profile-review-author {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.profile-review-time {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .profile-container { padding: 16px; }
-  .profile-header { flex-direction: column; align-items: center; text-align: center; }
+  .profile-container { padding: 20px 16px; }
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+  }
   .top-row { flex-direction: column; align-items: center; }
-  .rating { text-align: center; }
-  .stars { justify-content: center; }
+  .member { justify-content: center; }
+  .profile-stats { justify-content: center; }
   .grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .profile-container { padding: 16px 12px; }
+  .profile-header { padding: 16px; gap: 16px; }
+  .avatar-circle { width: 64px; height: 64px; }
+  .avatar-circle span { font-size: 26px; }
+  .profile-info h1 { font-size: 18px; }
+  .profile-stats { gap: 12px; margin-top: 12px; padding-top: 12px; }
+  .stat-number { font-size: 18px; }
+  .stat-label { font-size: 11px; }
+  .profile-game-card { padding: 10px 12px; }
+  .profile-game-info h3 { font-size: 13px; }
+  .profile-review-card { padding: 11px 12px; }
+  .profile-review-top h3 { font-size: 13px; }
 }
