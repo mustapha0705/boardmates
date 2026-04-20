@@ -1,8 +1,23 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+import { supabase } from "../lib/supabase";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    return { Authorization: `Bearer ${session.access_token}` };
+  }
+  return {};
+}
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
-  const headers = { "Content-Type": "application/json", ...options.headers };
+  const authHeaders = await getAuthHeaders();
+  const headers = {
+    "Content-Type": "application/json",
+    ...authHeaders,
+    ...options.headers,
+  };
 
   const res = await fetch(url, { ...options, headers });
 
@@ -19,9 +34,10 @@ async function request(path, options = {}) {
 
 // ── Games ──
 
-export function fetchGames({ cursor, status } = {}) {
+export function fetchGames({ cursor, limit, status } = {}) {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
+  if (limit) params.set("limit", limit);
   if (status) params.set("status", status);
   const qs = params.toString();
   return request(`/games${qs ? `?${qs}` : ""}`);
@@ -38,27 +54,45 @@ export function createGame(data) {
   });
 }
 
+export function updateGame(id, data) {
+  return request(`/games/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteGame(id) {
+  return request(`/games/${id}`, { method: "DELETE" });
+}
+
+// ── Review Workflow ──
+
 export function claimReview(gameId) {
   return request(`/games/${gameId}/claim`, { method: "POST" });
 }
 
-export function completeReview(gameId, analysisTree) {
-  return request(`/games/${gameId}/complete`, {
-    method: "POST",
-    body: JSON.stringify({ analysis: analysisTree }),
-  });
+export function completeReview(gameId) {
+  return request(`/games/${gameId}/complete`, { method: "POST" });
 }
 
-// ── Analysis / Comments ──
+export function unclaimReview(gameId) {
+  return request(`/games/${gameId}/unclaim`, { method: "POST" });
+}
 
-export function saveComment(gameId, nodeId, comment) {
+// ── Comments ──
+
+export function fetchComments(gameId) {
+  return request(`/games/${gameId}/comments`);
+}
+
+export function upsertComment(gameId, { ply, san, comment }) {
   return request(`/games/${gameId}/comments`, {
-    method: "POST",
-    body: JSON.stringify({ nodeId, comment }),
+    method: "PUT",
+    body: JSON.stringify({ ply, san, comment }),
   });
 }
 
-// ── Auth (Supabase-handled, but profile fetch goes through our API) ──
+// ── Profile ──
 
 export function fetchProfile() {
   return request("/profile");
@@ -69,4 +103,25 @@ export function updateProfile(data) {
     method: "PATCH",
     body: JSON.stringify(data),
   });
+}
+
+export function fetchProfileStats() {
+  return request("/profile/stats");
+}
+
+export function fetchProfileGames({ cursor, limit } = {}) {
+  const params = new URLSearchParams();
+  if (cursor) params.set("cursor", cursor);
+  if (limit) params.set("limit", limit);
+  const qs = params.toString();
+  return request(`/profile/games${qs ? `?${qs}` : ""}`);
+}
+
+export function fetchProfileReviews({ cursor, limit, status } = {}) {
+  const params = new URLSearchParams();
+  if (cursor) params.set("cursor", cursor);
+  if (limit) params.set("limit", limit);
+  if (status) params.set("status", status);
+  const qs = params.toString();
+  return request(`/profile/reviews${qs ? `?${qs}` : ""}`);
 }

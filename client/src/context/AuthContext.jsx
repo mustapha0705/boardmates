@@ -1,0 +1,141 @@
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "../lib/supabase";
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+
+  const fetchProfile = useCallback(async (accessToken) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (mountedRef.current) setProfile(data);
+        return data;
+      }
+      if (mountedRef.current) setProfile(null);
+      return null;
+    } catch {
+      if (mountedRef.current) setProfile(null);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!mountedRef.current) return;
+      setSession(s);
+      if (s?.access_token) {
+        fetchProfile(s.access_token).finally(() => {
+          if (mountedRef.current) setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mountedRef.current) return;
+      setSession(s);
+      if (s?.access_token) {
+        fetchProfile(s.access_token);
+      } else {
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
+
+  const signUp = useCallback(async ({ email, password, displayName, chessUsername, rating }) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+
+    const token = data.session?.access_token;
+    if (token) {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          displayName,
+          chessUsername: chessUsername || null,
+          rating: rating ? parseInt(rating, 10) : null,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || "Failed to create profile");
+      }
+
+      const profileData = await res.json();
+      setProfile(profileData);
+    }
+
+    return data;
+  }, []);
+
+  const signIn = useCallback(async ({ email, password }) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/` },
+    });
+    if (error) throw error;
+  }, []);
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setSession(null);
+    setProfile(null);
+  }, []);
+
+  const refreshProfile = useCallback(() => {
+    if (session?.access_token) return fetchProfile(session.access_token);
+    return Promise.resolve(null);
+  }, [session, fetchProfile]);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        user: profile,
+        loading,
+        isAuthenticated: !!session,
+        signUp,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        refreshProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}

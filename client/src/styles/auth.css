@@ -225,6 +225,17 @@
 .primary-btn:hover { background: #2d2d4a; }
 .primary-btn:active { transform: scale(0.98); }
 
+/* Auth error */
+.auth-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
 /* Divider */
 .divider {
   margin: 18px 0;
