@@ -1,36 +1,59 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useGames, CURRENT_USER } from "../context/GameContext";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
+import { fetchGames, claimReview } from "../services/api";
 import GameCard from "../components/GameCard.jsx";
 import "../styles/feed.css";
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 
 export default function Feed() {
   const navigate = useNavigate();
-  const { games, updateGame } = useGames();
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const sentinelRef = useRef(null);
+  const [claimingId, setClaimingId] = useState(null);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: ["games"],
+    queryFn: ({ pageParam }) => fetchGames({ cursor: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+    initialPageParam: undefined,
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: claimReview,
+    onMutate: (id) => setClaimingId(id),
+    onSuccess: (_data, gameId) => {
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      navigate(`/review-game/${gameId}`);
+    },
+    onSettled: () => setClaimingId(null),
+  });
 
   const handleStartReview = useCallback(
-    (id) => {
-      updateGame(id, { status: "in_review", reviewer: CURRENT_USER });
-      navigate(`/review-game/${id}`);
-    },
-    [navigate, updateGame],
+    (id) => claimMutation.mutate(id),
+    [claimMutation],
   );
 
-  const visible = games.slice(0, visibleCount);
-  const hasMore = visibleCount < games.length;
+  const games = data?.pages.flatMap((page) => page.games) ?? [];
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el) return;
+    if (!el || !hasNextPage) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisibleCount((c) => Math.min(c + PAGE_SIZE, games.length));
+        if (entry.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { rootMargin: "200px" },
@@ -38,14 +61,23 @@ export default function Feed() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [games.length]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <main className="feed">
       <h1 className="feed-heading">Review Feed</h1>
       <p className="feed-sub">Games waiting for your strategic feedback</p>
 
-      {games.length === 0 ? (
+      {isLoading ? (
+        <div className="feed-empty">
+          <p className="feed-empty-title">Loading games…</p>
+        </div>
+      ) : isError ? (
+        <div className="feed-empty">
+          <p className="feed-empty-title">Failed to load games</p>
+          <p className="feed-empty-sub">Please try refreshing the page.</p>
+        </div>
+      ) : games.length === 0 ? (
         <div className="feed-empty">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -61,18 +93,27 @@ export default function Feed() {
         </div>
       ) : (
         <div className="feed-list">
-          {visible.map((game) => (
+          {games.map((game) => (
             <GameCard
               key={game.id}
               game={game}
-              currentUser={CURRENT_USER}
+              currentUserId={user?.id}
               onStartReview={handleStartReview}
+              claiming={claimingId === game.id}
             />
           ))}
         </div>
       )}
 
-      {hasMore && <div ref={sentinelRef} className="scroll-sentinel" />}
+      {hasNextPage && (
+        <div ref={sentinelRef} className="scroll-sentinel">
+          {isFetchingNextPage && (
+            <p style={{ textAlign: "center", color: "var(--color-text-tertiary)", fontSize: 13, padding: 16 }}>
+              Loading more…
+            </p>
+          )}
+        </div>
+      )}
     </main>
   );
 }

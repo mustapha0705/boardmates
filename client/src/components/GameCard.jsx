@@ -2,22 +2,32 @@ import { Link } from "react-router-dom";
 import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
 
-export default function GameCard({ game, currentUser, onStartReview }) {
-  const { id, title, submittedAt, timeControl, status, reviewer, author } =
-    game;
+export default function GameCard({ game, currentUserId, onStartReview, claiming }) {
+  const { id, title, submittedAt, timeControl, status, reviewer, author } = game;
   const badge = STATUS_CONFIG[status];
-  const isReviewer = reviewer === currentUser;
+
+  const authorName = author?.displayName ?? author ?? "Unknown";
+  const reviewerName = reviewer?.displayName ?? reviewer ?? null;
+  const isReviewer = reviewer && (reviewer.id === currentUserId || reviewer === currentUserId);
+  const isAuthor = author && (author.id === currentUserId || author === currentUserId);
 
   let cta;
-  if (status === "pending") {
+  if (status === "pending" && !isAuthor) {
     cta = (
       <button
         type="button"
         className="review-btn"
         onClick={() => onStartReview(id)}
+        disabled={claiming}
       >
-        Start Review →
+        {claiming ? "Claiming…" : "Start Review →"}
       </button>
+    );
+  } else if (status === "pending" && isAuthor) {
+    cta = (
+      <Link to={`/game-detail/${id}`} className="review-btn btn-view">
+        View Game →
+      </Link>
     );
   } else if (status === "in_review" && isReviewer) {
     cta = (
@@ -69,17 +79,17 @@ export default function GameCard({ game, currentUser, onStartReview }) {
           <div className="card-meta">
             <span className="meta-pill">⏱ {timeControl}</span>
             <span className="dot" />
-            <span className="meta-pill">by {author}</span>
+            <span className="meta-pill">by {authorName}</span>
             {game.averageRating && (
               <>
                 <span className="dot" />
                 <span className="meta-pill">⭐ {game.averageRating}</span>
               </>
             )}
-            {reviewer && (
+            {reviewerName && (
               <>
                 <span className="dot" />
-                <span className="meta-pill">🔍 {reviewer}</span>
+                <span className="meta-pill">🔍 {reviewerName}</span>
               </>
             )}
           </div>

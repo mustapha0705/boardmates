@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Chess } from "chess.js";
-import { useGames, CURRENT_USER } from "../context/GameContext";
+import { createGame } from "../services/api";
 import "../styles/submit-game.css";
 
 const TIME_CONTROL_LABELS = {
@@ -50,7 +51,7 @@ function generateTitle(headers) {
 
 export default function SubmitGame() {
   const navigate = useNavigate();
-  const { addGame } = useGames();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("upload");
   const [pgnText, setPgnText] = useState("");
@@ -60,8 +61,19 @@ export default function SubmitGame() {
   const [timeControl, setTimeControl] = useState("blitz");
   const [reviewNotes, setReviewNotes] = useState("");
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+
+  const mutation = useMutation({
+    mutationFn: createGame,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      navigate("/");
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to submit game");
+    },
+  });
 
   function handleFileChange(e) {
     const file = e.target.files[0];
@@ -106,7 +118,6 @@ export default function SubmitGame() {
       return;
     }
 
-    setSubmitting(true);
     setError("");
 
     const chess = new Chess();
@@ -122,20 +133,13 @@ export default function SubmitGame() {
     const title = generateTitle(headers);
     const tc = TIME_CONTROL_LABELS[timeControl] || timeControl;
 
-    addGame({
+    mutation.mutate({
       title,
       pgn,
-      submittedAt: new Date().toISOString(),
       timeControl: tc,
-      status: "pending",
-      reviewer: null,
-      author: CURRENT_USER,
-      averageRating: Number(averageRating) || 1200,
+      averageRating: Number(averageRating) || null,
       reviewNotes: reviewNotes.trim() || null,
     });
-
-    setSubmitting(false);
-    navigate("/");
   }
 
   return (
@@ -356,10 +360,10 @@ export default function SubmitGame() {
             <button
               className="primary-btn"
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={mutation.isPending}
             >
               <svg xmlns="http://w3.org" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
-              {submitting ? "Submitting..." : "Submit for Review"}
+              {mutation.isPending ? "Submitting..." : "Submit for Review"}
             </button>
             <p className="disclaimer">
               By submitting, you agree to our community guidelines and analysis

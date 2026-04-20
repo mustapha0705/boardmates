@@ -1,23 +1,51 @@
 import { Link } from "react-router-dom";
-import { useGames, CURRENT_USER } from "../context/GameContext";
-import { STATUS_CONFIG } from "../constants/gameStatus";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
+import { fetchProfileStats, fetchProfileGames, fetchProfileReviews } from "../services/api";
 import { timeAgo } from "../utils/time";
 import "../styles/profile.css";
+
+const STATUS_BADGE = {
+  pending: { label: "Pending", className: "profile-badge-pending" },
+  in_review: { label: "In Review", className: "profile-badge-in-review" },
+  completed: { label: "Completed", className: "profile-badge-completed" },
+};
 
 function getInitial(name) {
   return name ? name.charAt(0).toUpperCase() : "?";
 }
 
 export default function Profile() {
-  const { games } = useGames();
+  const { user } = useAuth();
 
-  const submitted = games.filter((g) => g.author === CURRENT_USER);
-  const reviewed = games.filter(
-    (g) => g.reviewer === CURRENT_USER && g.status === "completed",
-  );
-  const inProgress = games.filter(
-    (g) => g.reviewer === CURRENT_USER && g.status === "in_review",
-  );
+  const { data: stats } = useQuery({
+    queryKey: ["profile", "stats"],
+    queryFn: fetchProfileStats,
+  });
+
+  const { data: gamesData } = useQuery({
+    queryKey: ["profile", "games"],
+    queryFn: () => fetchProfileGames({ limit: 5 }),
+  });
+
+  const { data: reviewsData } = useQuery({
+    queryKey: ["profile", "reviews", "completed"],
+    queryFn: () => fetchProfileReviews({ status: "completed", limit: 5 }),
+  });
+
+  const { data: inProgressData } = useQuery({
+    queryKey: ["profile", "reviews", "in_review"],
+    queryFn: () => fetchProfileReviews({ status: "in_review", limit: 3 }),
+  });
+
+  const submitted = gamesData?.games ?? [];
+  const reviewed = reviewsData?.games ?? [];
+  const inProgress = inProgressData?.games ?? [];
+
+  const displayName = user?.displayName ?? "Player";
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).getFullYear()
+    : "—";
 
   return (
     <div className="feed">
@@ -25,14 +53,17 @@ export default function Profile() {
         <main className="profile-container">
           <section className="profile-header">
             <div className="avatar-circle">
-              <span>{getInitial(CURRENT_USER)}</span>
+              <span>{getInitial(displayName)}</span>
             </div>
 
             <div className="profile-info">
               <div className="top-row">
                 <div>
-                  <h1>{CURRENT_USER}</h1>
-                  <p className="subtitle">Chess Enthusiast & Reviewer</p>
+                  <h1>{displayName}</h1>
+                  <p className="subtitle">
+                    {user?.chessUsername && <>{user.chessUsername} · </>}
+                    {user?.rating ? `${user.rating} ELO` : "Chess Enthusiast"}
+                  </p>
                   <p className="member">
                     <svg
                       width="13"
@@ -48,24 +79,24 @@ export default function Profile() {
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    Member since 2023
+                    Member since {memberSince}
                   </p>
                 </div>
               </div>
 
               <div className="profile-stats">
                 <div className="stat-item">
-                  <span className="stat-number">{submitted.length}</span>
+                  <span className="stat-number">{stats?.submitted ?? "—"}</span>
                   <span className="stat-label">Submitted</span>
                 </div>
                 <div className="stat-divider" />
                 <div className="stat-item">
-                  <span className="stat-number">{reviewed.length}</span>
+                  <span className="stat-number">{stats?.reviewed ?? "—"}</span>
                   <span className="stat-label">Reviewed</span>
                 </div>
                 <div className="stat-divider" />
                 <div className="stat-item">
-                  <span className="stat-number">{inProgress.length}</span>
+                  <span className="stat-number">{stats?.inProgress ?? "—"}</span>
                   <span className="stat-label">In Progress</span>
                 </div>
               </div>
@@ -83,7 +114,7 @@ export default function Profile() {
                   </svg>
                   Games Submitted
                 </h2>
-                <span className="badge">{submitted.length}</span>
+                <span className="badge">{stats?.submitted ?? 0}</span>
               </div>
 
               {submitted.length === 0 ? (
@@ -94,8 +125,8 @@ export default function Profile() {
                   </Link>
                 </div>
               ) : (
-                submitted.slice(0, 5).map((game) => {
-                  const badge = STATUS_CONFIG[game.status];
+                submitted.map((game) => {
+                  const badge = STATUS_BADGE[game.status] ?? STATUS_BADGE.pending;
                   return (
                     <Link
                       to={`/game-detail/${game.id}`}
@@ -108,9 +139,7 @@ export default function Profile() {
                           <span className="profile-meta-pill">
                             ⏱ {game.timeControl}
                           </span>
-                          <span
-                            className={`profile-status-badge ${badge.className}`}
-                          >
+                          <span className={`profile-status-badge ${badge.className}`}>
                             {badge.label}
                           </span>
                         </div>
@@ -132,7 +161,7 @@ export default function Profile() {
                   </svg>
                   Games Reviewed
                 </h2>
-                <span className="badge">{reviewed.length}</span>
+                <span className="badge">{stats?.reviewed ?? 0}</span>
               </div>
 
               {reviewed.length === 0 ? (
@@ -143,7 +172,7 @@ export default function Profile() {
                   </Link>
                 </div>
               ) : (
-                reviewed.slice(0, 5).map((game) => (
+                reviewed.map((game) => (
                   <Link
                     to={`/game-detail/${game.id}`}
                     className="profile-review-card"
@@ -157,7 +186,7 @@ export default function Profile() {
                     </div>
                     <div className="profile-review-bottom">
                       <span className="profile-review-author">
-                        by {game.author}
+                        by {game.author?.displayName ?? "Unknown"}
                       </span>
                       <span className="profile-review-time">
                         {timeAgo(game.submittedAt)}
@@ -179,7 +208,7 @@ export default function Profile() {
                     </h2>
                     <span className="badge">{inProgress.length}</span>
                   </div>
-                  {inProgress.slice(0, 3).map((game) => (
+                  {inProgress.map((game) => (
                     <Link
                       to={`/review-game/${game.id}`}
                       className="profile-review-card in-progress"
@@ -193,7 +222,7 @@ export default function Profile() {
                       </div>
                       <div className="profile-review-bottom">
                         <span className="profile-review-author">
-                          by {game.author}
+                          by {game.author?.displayName ?? "Unknown"}
                         </span>
                         <span className="profile-badge-in-review profile-status-badge">
                           In Review
