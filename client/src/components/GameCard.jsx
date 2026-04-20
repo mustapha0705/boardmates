@@ -2,17 +2,32 @@ import { Link } from "react-router-dom";
 import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
 
-export default function GameCard({ game, currentUserId, onStartReview, claiming }) {
+export default function GameCard({ game, currentUserId, authLoading, onStartReview, claiming }) {
   const { id, title, submittedAt, timeControl, status, reviewer, author } = game;
   const badge = STATUS_CONFIG[status];
 
   const authorName = author?.displayName ?? author ?? "Unknown";
   const reviewerName = reviewer?.displayName ?? reviewer ?? null;
-  const isReviewer = reviewer && (reviewer.id === currentUserId || reviewer === currentUserId);
-  const isAuthor = author && (author.id === currentUserId || author === currentUserId);
+  const hasUserId = currentUserId != null && currentUserId !== "";
+  const isReviewer =
+    hasUserId && reviewer && (reviewer.id === currentUserId || reviewer === currentUserId);
+  const isAuthor =
+    hasUserId && author && (author.id === currentUserId || author === currentUserId);
 
   let cta;
-  if (status === "pending" && !isAuthor) {
+  if (status === "pending" && authLoading) {
+    cta = (
+      <button type="button" className="review-btn" disabled>
+        Loading…
+      </button>
+    );
+  } else if (status === "pending" && !hasUserId) {
+    cta = (
+      <button type="button" className="review-btn" disabled title="Could not determine your account. Try refreshing.">
+        Review Game →
+      </button>
+    );
+  } else if (status === "pending" && !isAuthor) {
     cta = (
       <button
         type="button"
@@ -20,7 +35,7 @@ export default function GameCard({ game, currentUserId, onStartReview, claiming 
         onClick={() => onStartReview(id)}
         disabled={claiming}
       >
-        {claiming ? "Claiming…" : "Start Review →"}
+        {claiming ? "Claiming…" : "Review Game →"}
       </button>
     );
   } else if (status === "pending" && isAuthor) {

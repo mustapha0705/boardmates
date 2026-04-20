@@ -42,9 +42,12 @@ export function AuthProvider({ children }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       if (!mountedRef.current) return;
       setSession(s);
+      // INITIAL_SESSION is already followed by getSession() above; fetching profile twice
+      // doubles traffic and can hit rate limits during dev (Strict Mode, HMR).
+      if (event === "INITIAL_SESSION") return;
       if (s?.access_token) {
         const existing = await fetchProfile(s.access_token);
         if (!existing && s.user?.user_metadata?.displayName) {
@@ -141,11 +144,15 @@ export function AuthProvider({ children }) {
     return Promise.resolve(null);
   }, [session, fetchProfile]);
 
+  const viewerId = profile?.id ?? session?.user?.id ?? null;
+
   return (
     <AuthContext.Provider
       value={{
         session,
         user: profile,
+        /** Same as Supabase auth user id; use when `user` is null (e.g. profile fetch failed). */
+        viewerId,
         loading,
         isAuthenticated: !!session,
         signUp,

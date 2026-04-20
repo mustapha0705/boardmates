@@ -11,9 +11,12 @@ const PAGE_SIZE = 10;
 export default function Feed() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { viewerId, loading } = useAuth();
+  const identityReady = Boolean(viewerId);
+  const authLoading = loading && !identityReady;
   const sentinelRef = useRef(null);
   const [claimingId, setClaimingId] = useState(null);
+  const [claimError, setClaimError] = useState(null);
 
   const {
     data,
@@ -31,10 +34,16 @@ export default function Feed() {
 
   const claimMutation = useMutation({
     mutationFn: claimReview,
-    onMutate: (id) => setClaimingId(id),
+    onMutate: (id) => {
+      setClaimError(null);
+      setClaimingId(id);
+    },
     onSuccess: (_data, gameId) => {
+      navigate(`/review-game/${gameId}`, { replace: true });
       queryClient.invalidateQueries({ queryKey: ["games"] });
-      navigate(`/review-game/${gameId}`);
+    },
+    onError: (err) => {
+      setClaimError(err.message || "Could not claim this game");
     },
     onSettled: () => setClaimingId(null),
   });
@@ -68,6 +77,12 @@ export default function Feed() {
       <h1 className="feed-heading">Review Feed</h1>
       <p className="feed-sub">Games waiting for your strategic feedback</p>
 
+      {claimError && (
+        <div className="feed-claim-error" role="alert">
+          {claimError}
+        </div>
+      )}
+
       {isLoading ? (
         <div className="feed-empty">
           <p className="feed-empty-title">Loading games…</p>
@@ -97,7 +112,8 @@ export default function Feed() {
             <GameCard
               key={game.id}
               game={game}
-              currentUserId={user?.id}
+              currentUserId={viewerId}
+              authLoading={authLoading}
               onStartReview={handleStartReview}
               claiming={claimingId === game.id}
             />

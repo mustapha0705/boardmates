@@ -12,7 +12,7 @@ import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 
 function ReviewGameInner({ game, onCompleteReview, completing, onSaveComment, savingComment }) {
-  const { user } = useAuth();
+  const { viewerId } = useAuth();
   const tree = useAnalysisTree(null, game?.pgn);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -28,7 +28,7 @@ function ReviewGameInner({ game, onCompleteReview, completing, onSaveComment, sa
   const subtitle = game ? `${game.timeControl} · Submitted by ${authorName}` : "";
 
   const isInReview = game?.status === "in_review";
-  const isMyReview = game?.reviewer?.id === user?.id;
+  const isMyReview = game?.reviewer?.id === viewerId;
 
   const handleSaveComment = useCallback(
     (text) => {
