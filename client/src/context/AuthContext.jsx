@@ -10,17 +10,30 @@ export function AuthProvider({ children }) {
   const mountedRef = useRef(true);
 
   const fetchProfile = useCallback(async (accessToken) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+    const url = `${import.meta.env.VITE_API_URL}/profile`;
+    const headers = { Authorization: `Bearer ${accessToken}` };
+
+    async function tryFetch() {
+      const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();
         if (mountedRef.current) setProfile(data);
         return data;
       }
-      if (mountedRef.current) setProfile(null);
-      return null;
+      return res;
+    }
+
+    try {
+      let result = await tryFetch();
+      if (result instanceof Response && result.status === 429) {
+        await new Promise((r) => setTimeout(r, 800));
+        result = await tryFetch();
+      }
+      if (result instanceof Response) {
+        if (mountedRef.current) setProfile(null);
+        return null;
+      }
+      return result;
     } catch {
       if (mountedRef.current) setProfile(null);
       return null;
