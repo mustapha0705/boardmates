@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGames, CURRENT_USER } from "../context/GameContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthContext";
+import { fetchGame, completeReview, upsertComment } from "../services/api";
 import useAnalysisTree, { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
@@ -9,7 +11,8 @@ import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 
-function ReviewGameInner({ game, onCompleteReview }) {
+function ReviewGameInner({ game, onCompleteReview, completing, onSaveComment, savingComment }) {
+  const { user } = useAuth();
   const tree = useAnalysisTree(null, game?.pgn);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -21,21 +24,33 @@ function ReviewGameInner({ game, onCompleteReview }) {
   });
 
   const title = game?.title || "Game Review";
-  const subtitle = game
-    ? `${game.timeControl} · Submitted by ${game.author}`
-    : "";
+  const authorName = game?.author?.displayName ?? "Unknown";
+  const subtitle = game ? `${game.timeControl} · Submitted by ${authorName}` : "";
 
   const isInReview = game?.status === "in_review";
-  const isMyReview = game?.reviewer === CURRENT_USER;
+  const isMyReview = game?.reviewer?.id === user?.id;
+
+  const handleSaveComment = useCallback(
+    (text) => {
+      const node = tree.currentNode;
+      tree.setComment(text);
+      if (game?.id) {
+        onSaveComment({
+          ply: node.ply,
+          san: node.san || null,
+          comment: text,
+        });
+      }
+    },
+    [tree, game?.id, onSaveComment],
+  );
 
   return (
     <main className="review-container">
       <div className="review-header">
         <div>
           <h2 className="review-title">{title}</h2>
-          {subtitle && (
-            <span className="review-subtitle">{subtitle}</span>
-          )}
+          {subtitle && <span className="review-subtitle">{subtitle}</span>}
         </div>
         <div className="review-header-actions">
           {game?.averageRating && (
@@ -58,8 +73,9 @@ function ReviewGameInner({ game, onCompleteReview }) {
               <button
                 className="confirm-yes-btn"
                 onClick={onCompleteReview}
+                disabled={completing}
               >
-                Yes, finish
+                {completing ? "Finishing…" : "Yes, finish"}
               </button>
               <button
                 className="confirm-no-btn"
@@ -75,14 +91,7 @@ function ReviewGameInner({ game, onCompleteReview }) {
       {game?.reviewNotes && (
         <div className="review-notes-card">
           <div className="review-notes-header">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             Submitter&rsquo;s Review Request
@@ -109,7 +118,8 @@ function ReviewGameInner({ game, onCompleteReview }) {
           />
           <CommentForm
             currentNode={tree.currentNode}
-            onSaveComment={tree.setComment}
+            onSaveComment={handleSaveComment}
+            saving={savingComment}
           />
         </div>
         <div className="right-column">
@@ -127,20 +137,59 @@ function ReviewGameInner({ game, onCompleteReview }) {
 export default function ReviewGame() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getGame, updateGame } = useGames();
-  const game = getGame(id);
+  const queryClient = useQueryClient();
 
-  function handleCompleteReview() {
-    if (!game) return;
-    updateGame(game.id, { status: "completed" });
-    navigate("/");
+  const { data: game, isLoading, isError } = useQuery({
+    queryKey: ["game", id],
+    queryFn: () => fetchGame(id),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => completeReview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: ["game", id] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      navigate("/");
+    },
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: (data) => upsertComment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game", id] });
+    },
+  });
+
+  const handleSaveComment = useCallback(
+    (data) => commentMutation.mutate(data),
+    [commentMutation],
+  );
+
+  if (isLoading) {
+    return (
+      <main className="review-container">
+        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Loading game…</p>
+      </main>
+    );
+  }
+
+  if (isError || !game) {
+    return (
+      <main className="review-container">
+        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Game not found.</p>
+      </main>
+    );
   }
 
   return (
     <ReviewGameInner
       key={id}
       game={game}
-      onCompleteReview={handleCompleteReview}
+      onCompleteReview={() => completeMutation.mutate()}
+      completing={completeMutation.isPending}
+      onSaveComment={handleSaveComment}
+      savingComment={commentMutation.isPending}
     />
   );
 }

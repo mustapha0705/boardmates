@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { GameProvider } from "./context/GameContext";
 import Layout from "./components/Layout.jsx";
 import Feed from "./pages/Feed.jsx";
 import SubmitGame from "./pages/SubmitGame.jsx";
@@ -44,7 +43,6 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <GameProvider>
           <Routes>
             <Route
               path="/"
@@ -78,7 +76,6 @@ function App() {
             />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-        </GameProvider>
       </AuthProvider>
     </BrowserRouter>
   );

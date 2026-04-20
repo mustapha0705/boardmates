@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 
-export default function CommentForm({ currentNode, onSaveComment }) {
+export default function CommentForm({ currentNode, onSaveComment, saving }) {
   const [text, setText] = useState("");
 
   useEffect(() => {
@@ -39,10 +39,10 @@ export default function CommentForm({ currentNode, onSaveComment }) {
         </button>
         <button
           className="btn-primary"
-          disabled={!text.trim()}
+          disabled={!text.trim() || saving}
           onClick={handleSave}
         >
-          Save Comment
+          {saving ? "Saving…" : "Save Comment"}
         </button>
       </div>
     </div>
