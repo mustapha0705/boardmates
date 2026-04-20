@@ -1,6 +1,13 @@
 import supabaseAdmin from "../config/supabase.js";
 import { prisma } from "../../config/db.js";
 
+export function requireProfile(req, res, next) {
+  if (!req.user) {
+    return res.status(403).json({ message: "Profile not found. Please complete signup first." });
+  }
+  next();
+}
+
 export async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
 
