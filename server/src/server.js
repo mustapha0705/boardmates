@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
   res.json({
       status: 'OK',
       message: 'Boardmates API is running',
