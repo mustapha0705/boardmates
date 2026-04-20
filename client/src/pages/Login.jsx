@@ -24,7 +24,12 @@ export default function Login() {
       await signIn({ email, password });
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("email not confirmed")) {
+        setError("Your email hasn't been confirmed yet. Please check your inbox for the confirmation link.");
+      } else {
+        setError(msg || "Invalid email or password");
+      }
     } finally {
       setSubmitting(false);
     }

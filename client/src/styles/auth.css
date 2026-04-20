@@ -236,6 +236,33 @@
   margin-bottom: 16px;
 }
 
+/* Email confirmation */
+.auth-confirmation {
+  text-align: center;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.auth-confirmation-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.auth-link-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
 /* Divider */
 .divider {
   margin: 18px 0;

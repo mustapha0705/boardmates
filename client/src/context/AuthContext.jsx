@@ -42,11 +42,30 @@ export function AuthProvider({ children }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       if (!mountedRef.current) return;
       setSession(s);
       if (s?.access_token) {
-        fetchProfile(s.access_token);
+        const existing = await fetchProfile(s.access_token);
+        if (!existing && s.user?.user_metadata?.displayName) {
+          const meta = s.user.user_metadata;
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${s.access_token}`,
+            },
+            body: JSON.stringify({
+              displayName: meta.displayName,
+              chessUsername: meta.chessUsername || null,
+              rating: meta.rating || null,
+            }),
+          }).catch(() => null);
+          if (res?.ok) {
+            const p = await res.json();
+            if (mountedRef.current) setProfile(p);
+          }
+        }
       } else {
         setProfile(null);
       }
@@ -59,16 +78,23 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   const signUp = useCallback(async ({ email, password, displayName, chessUsername, rating }) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { displayName, chessUsername: chessUsername || null, rating: rating ? parseInt(rating, 10) : null },
+      },
+    });
     if (error) throw error;
 
-    const token = data.session?.access_token;
-    if (token) {
+    const needsConfirmation = !data.session;
+
+    if (data.session?.access_token) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${data.session.access_token}`,
         },
         body: JSON.stringify({
           displayName,
@@ -86,7 +112,7 @@ export function AuthProvider({ children }) {
       setProfile(profileData);
     }
 
-    return data;
+    return { ...data, needsConfirmation };
   }, []);
 
   const signIn = useCallback(async ({ email, password }) => {

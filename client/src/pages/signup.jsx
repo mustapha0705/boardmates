@@ -11,6 +11,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -29,14 +30,19 @@ export default function Signup() {
     setSubmitting(true);
 
     try {
-      await signUp({
+      const result = await signUp({
         email,
         password,
         displayName,
         chessUsername: chessUsername || null,
         rating: rating || null,
       });
-      navigate("/", { replace: true });
+
+      if (result.needsConfirmation) {
+        setConfirmationSent(true);
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Signup failed");
     } finally {
@@ -73,10 +79,32 @@ export default function Signup() {
           </div>
 
           <div className="signup-title">
-            <h1>Create your account</h1>
-            <p>Join the world's most active community of chess enthusiasts.</p>
+            <h1>{confirmationSent ? "Check your inbox" : "Create your account"}</h1>
+            <p>
+              {confirmationSent
+                ? `We've sent a confirmation link to ${email}. Click the link in the email to activate your account.`
+                : "Join the world's most active community of chess enthusiasts."}
+            </p>
           </div>
 
+          {confirmationSent ? (
+            <div className="auth-confirmation">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M2 7l10 7 10-7"/>
+              </svg>
+              <p className="auth-confirmation-hint">
+                Didn&apos;t receive the email? Check your spam folder or{" "}
+                <button type="button" className="auth-link-btn" onClick={() => setConfirmationSent(false)}>
+                  try again
+                </button>.
+              </p>
+              <Link to="/login" className="primary-btn" style={{ display: "inline-block", textAlign: "center", textDecoration: "none", marginTop: 8 }}>
+                Go to login
+              </Link>
+            </div>
+          ) : (
+          <>
           {error && <div className="auth-error">{error}</div>}
 
           <form className="signup-form" onSubmit={handleSubmit}>
@@ -171,6 +199,8 @@ export default function Signup() {
           <p className="terms">
             By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
           </p>
+          </>
+          )}
 
           <footer className="signup-footer">
             <span>&copy; 2024 Boardmates</span>
