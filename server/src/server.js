@@ -1,4 +1,7 @@
 import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/authRoutes.js";
 import { connectDB, disconnectDB } from "../config/db.js";
 import { configDotenv } from "dotenv";
@@ -8,6 +11,17 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT;
+
+app.use(cors());
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests, please try again later."
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
