@@ -8,10 +8,6 @@ export async function signup(req, res) {
       where: { id: supabaseUser.id },
     });
 
-    if (existing) {
-      return res.status(409).json({ message: "Profile already exists" });
-    }
-
     const { displayName, chessUsername, rating } = req.body;
 
     if (!displayName || displayName.trim().length < 2) {
@@ -19,6 +15,18 @@ export async function signup(req, res) {
         message: "Validation failed",
         errors: [{ field: "displayName", message: "Display name is required (min 2 characters)" }],
       });
+    }
+
+    if (existing) {
+      const updated = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          displayName: displayName.trim(),
+          chessUsername: chessUsername?.trim() || null,
+          rating: rating ? parseInt(rating, 10) : null,
+        },
+      });
+      return res.status(200).json(formatUser(updated));
     }
 
     const user = await prisma.user.create({

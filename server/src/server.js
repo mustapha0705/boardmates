@@ -13,17 +13,27 @@ const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(helmet());
-// Default cap is easy to hit during local dev (HMR, React Strict Mode, many parallel API calls).
-const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX) || (process.env.NODE_ENV === "production" ? 400 : 8000);
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: RATE_LIMIT_MAX,
-    message: "Too many requests, please try again later.",
-    standardHeaders: true,
-    legacyHeaders: false,
-  }),
-);
+// Off by default — global limits are easy to trip during dev (Strict Mode, Supabase refresh, HMR).
+// Turn on in production: RATE_LIMIT_ENABLED=true
+const enableRateLimit =
+  process.env.RATE_LIMIT_ENABLED === "true" || process.env.RATE_LIMIT_ENABLED === "1";
+
+if (enableRateLimit) {
+  const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX);
+  const limit = Number.isFinite(RATE_LIMIT_MAX) && RATE_LIMIT_MAX > 0 ? RATE_LIMIT_MAX : 2000;
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit,
+      message: "Too many requests, please try again later.",
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+  console.log(`API rate limiting: enabled (${limit} req / 15 min per IP)`);
+} else {
+  console.log("API rate limiting: off (set RATE_LIMIT_ENABLED=true to enable)");
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

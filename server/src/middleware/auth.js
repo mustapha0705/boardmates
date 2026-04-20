@@ -8,6 +8,77 @@ export function requireProfile(req, res, next) {
   next();
 }
 
+function displayNameFromAuthUser(authUser) {
+  const meta = authUser.user_metadata || {};
+  const raw =
+    meta.display_name ||
+    meta.displayName ||
+    meta.full_name ||
+    meta.name ||
+    meta.preferred_username ||
+    (authUser.email ? authUser.email.split("@")[0] : "") ||
+    "Player";
+  let name = String(raw).trim().slice(0, 80);
+  if (name.length < 2) name = "Player";
+  return name;
+}
+
+/**
+ * Ensures a `users` row exists for this Supabase user (OAuth / email users may never call POST /auth/signup).
+ * Uses upsert so concurrent first requests cannot leave the user without a row.
+ */
+async function ensureUserProfile(authUser) {
+  const id = authUser.id;
+  if (!id) {
+    console.error("ensureUserProfile: missing Supabase user id");
+    return null;
+  }
+
+  const displayName = displayNameFromAuthUser(authUser);
+  const primaryEmail =
+    authUser.email && authUser.email.trim().length > 0
+      ? authUser.email.trim()
+      : `${id}@users.local`;
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (existing) return existing;
+
+  try {
+    return await prisma.user.create({
+      data: {
+        id,
+        email: primaryEmail,
+        displayName,
+        chessUsername: null,
+        rating: null,
+      },
+    });
+  } catch (err) {
+    if (err.code === "P2002") {
+      const byId = await prisma.user.findUnique({ where: { id } });
+      if (byId) return byId;
+      // Rare: email unique collision (e.g. race) — use a deterministic per-user email.
+      try {
+        return await prisma.user.create({
+          data: {
+            id,
+            email: `${id}@users.local`,
+            displayName,
+            chessUsername: null,
+            rating: null,
+          },
+        });
+      } catch (err2) {
+        if (err2.code === "P2002") {
+          return prisma.user.findUnique({ where: { id } });
+        }
+        throw err2;
+      }
+    }
+    throw err;
+  }
+}
+
 export async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
 
@@ -24,11 +95,28 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    const profile = await prisma.user.findUnique({
-      where: { id: data.user.id },
+    const authUser = data.user;
+    let profile = await prisma.user.findUnique({
+      where: { id: authUser.id },
     });
 
-    req.authUser = data.user;
+    // POST /api/auth/signup must create the row itself; do not auto-provision here or signup always sees "already exists".
+    const pathKey = `${req.baseUrl || ""}${req.path || ""}`.replace(/\/+$/, "");
+    const origKey = (req.originalUrl || "").split("?")[0].replace(/\/+$/, "");
+    const isAuthSignup =
+      req.method === "POST" &&
+      (pathKey === "/api/auth/signup" || origKey === "/api/auth/signup");
+
+    if (!isAuthSignup && !profile) {
+      profile = await ensureUserProfile(authUser);
+    }
+
+    if (!isAuthSignup && !profile) {
+      console.error("requireAuth: could not load or create user profile for id", authUser.id);
+      return res.status(500).json({ message: "Could not load your account. Try again in a moment." });
+    }
+
+    req.authUser = authUser;
     req.user = profile;
 
     next();
