@@ -9,6 +9,7 @@ import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
 import "../styles/game-review.css";
 import { Chess } from "chess.js";
+import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
 
 let detailNodeId = 10000;
 
@@ -62,6 +63,10 @@ export default function GameDetail() {
   });
 
   const root = useMemo(() => {
+    if (game?.analysisTree) {
+      const fromJson = buildTreeFromAnalysisJson(game.analysisTree);
+      if (fromJson) return fromJson;
+    }
     if (!game?.pgn) return null;
     return buildTreeFromPgn(game.pgn, game.comments || []);
   }, [game]);

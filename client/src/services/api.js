@@ -71,8 +71,11 @@ export function claimReview(gameId) {
   return request(`/games/${gameId}/claim`, { method: "POST" });
 }
 
-export function completeReview(gameId) {
-  return request(`/games/${gameId}/complete`, { method: "POST" });
+export function completeReview(gameId, body = {}) {
+  return request(`/games/${gameId}/complete`, {
+    method: "POST",
+    body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
+  });
 }
 
 export function unclaimReview(gameId) {

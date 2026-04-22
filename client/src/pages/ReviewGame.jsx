@@ -10,8 +10,9 @@ import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
+import { serializeAnalysisTreeNode } from "../utils/analysisTree";
 
-function ReviewGameInner({ game, onCompleteReview, completing, onSaveComment, savingComment }) {
+function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComment, savingComment }) {
   const { viewerId } = useAuth();
   const tree = useAnalysisTree(null, game?.pgn);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -72,7 +73,8 @@ function ReviewGameInner({ game, onCompleteReview, completing, onSaveComment, sa
               <span className="confirm-text">Mark as completed?</span>
               <button
                 className="confirm-yes-btn"
-                onClick={onCompleteReview}
+                type="button"
+                onClick={() => onCompleteWithAnalysis(serializeAnalysisTreeNode(tree.root))}
                 disabled={completing}
               >
                 {completing ? "Finishing…" : "Yes, finish"}
@@ -145,7 +147,7 @@ export default function ReviewGame() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: () => completeReview(id),
+    mutationFn: (analysisTree) => completeReview(id, { analysisTree }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["games"] });
       queryClient.invalidateQueries({ queryKey: ["game", id] });
@@ -186,7 +188,7 @@ export default function ReviewGame() {
     <ReviewGameInner
       key={id}
       game={game}
-      onCompleteReview={() => completeMutation.mutate()}
+      onCompleteWithAnalysis={(analysisTree) => completeMutation.mutate(analysisTree)}
       completing={completeMutation.isPending}
       onSaveComment={handleSaveComment}
       savingComment={commentMutation.isPending}
