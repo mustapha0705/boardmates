@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
@@ -30,6 +30,8 @@ function ReviewGameInner({
   const [showConfirm, setShowConfirm] = useState(false);
 
   const { structureVersion, getSerializedTree } = tree;
+  const draftInFlightIdRef = useRef(0);
+  const draftAbortRef = useRef(null);
 
   useKeyboardNav({
     onFirst: tree.goToFirst,
@@ -46,14 +48,24 @@ function ReviewGameInner({
     const t = setTimeout(() => {
       const payload = getSerializedTree();
       if (!payload) return;
-      saveReviewAnalysisDraft(game.id, payload)
+      draftAbortRef.current?.abort();
+      const ac = new AbortController();
+      draftAbortRef.current = ac;
+      const thisReq = (draftInFlightIdRef.current += 1);
+      saveReviewAnalysisDraft(game.id, payload, { signal: ac.signal })
         .then((updated) => {
+          if (thisReq !== draftInFlightIdRef.current) return;
           queryClient.setQueryData(["game", game.id], updated);
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (err?.name === "AbortError") return;
+        });
     }, 1100);
 
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      draftAbortRef.current?.abort();
+    };
   }, [structureVersion, game?.id, game?.status, game?.reviewer?.id, viewerId, queryClient, getSerializedTree]);
 
   const handleSaveComment = useCallback(
@@ -193,6 +205,8 @@ export default function ReviewGame() {
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
     queryFn: () => fetchGame(id),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const completeMutation = useMutation({

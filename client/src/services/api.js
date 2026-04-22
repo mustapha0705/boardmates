@@ -11,6 +11,7 @@ async function getAuthHeaders() {
 }
 
 async function request(path, options = {}) {
+  const { signal, ...rest } = options;
   const url = `${API_BASE}${path}`;
   const authHeaders = await getAuthHeaders();
   const headers = {
@@ -19,7 +20,7 @@ async function request(path, options = {}) {
     ...options.headers,
   };
 
-  const res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...rest, signal, headers });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -78,10 +79,11 @@ export function completeReview(gameId, body = {}) {
   });
 }
 
-export function saveReviewAnalysisDraft(gameId, analysisTree) {
+export function saveReviewAnalysisDraft(gameId, analysisTree, { signal } = {}) {
   return request(`/games/${gameId}/review-analysis`, {
     method: "PATCH",
     body: JSON.stringify({ analysisTree }),
+    signal,
   });
 }
 
