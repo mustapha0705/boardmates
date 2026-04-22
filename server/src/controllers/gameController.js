@@ -4,6 +4,30 @@ const AUTHOR_SELECT = { id: true, displayName: true };
 const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 10;
 
+/** Prisma `Json` hit recursion limits on deep chess trees; we store a Text column of JSON. */
+function serializeAnalysisTreeForDb(value) {
+  if (value == null) return null;
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+
+function parseAnalysisTreeFromDb(stored) {
+  if (stored == null) return null;
+  if (typeof stored === "object" && !Array.isArray(stored)) {
+    return stored;
+  }
+  if (typeof stored !== "string") return null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
 function clampLimit(raw) {
   const n = parseInt(raw, 10) || DEFAULT_LIMIT;
   return Math.min(Math.max(n, 1), MAX_LIMIT);
@@ -27,7 +51,7 @@ function formatGame(game, { includePgn = false, includeComments = false, include
   if (includePgn) out.pgn = game.pgn;
 
   if (includeAnalysisTree && game.analysisTree != null) {
-    out.analysisTree = game.analysisTree;
+    out.analysisTree = parseAnalysisTreeFromDb(game.analysisTree);
   }
 
   if (includeComments && game.comments) {
@@ -256,7 +280,8 @@ export async function completeReview(req, res) {
       completedAt: new Date(),
     };
     if (analysisTree != null && typeof analysisTree === "object" && !Array.isArray(analysisTree)) {
-      data.analysisTree = analysisTree;
+      const stored = serializeAnalysisTreeForDb(analysisTree);
+      if (stored) data.analysisTree = stored;
     }
 
     const updated = await prisma.game.update({
@@ -320,9 +345,11 @@ function isValidAnalysisTreePayload(value) {
 
 async function persistAnalysisTreeDraft(gameId, tree) {
   if (!isValidAnalysisTreePayload(tree)) return;
+  const stored = serializeAnalysisTreeForDb(tree);
+  if (!stored) return;
   await prisma.game.update({
     where: { id: gameId },
-    data: { analysisTree: tree },
+    data: { analysisTree: stored },
   });
 }
 
@@ -338,7 +365,9 @@ export async function saveReviewAnalysisDraft(req, res) {
       return res.status(403).json({ message: "Only the assigned reviewer can update the analysis" });
     }
 
-    const { analysisTree } = req.body || {};
+    const raw = req.body?.analysisTree;
+    const analysisTree =
+      typeof raw === "string" ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : raw;
     if (!isValidAnalysisTreePayload(analysisTree)) {
       return res.status(400).json({ message: "analysisTree (object with root fen) is required" });
     }
