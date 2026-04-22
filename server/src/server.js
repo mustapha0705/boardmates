@@ -30,9 +30,6 @@ if (enableRateLimit) {
       legacyHeaders: false,
     }),
   );
-  console.log(`API rate limiting: enabled (${limit} req / 15 min per IP)`);
-} else {
-  console.log("API rate limiting: off (set RATE_LIMIT_ENABLED=true to enable)");
 }
 
 app.use(express.json());

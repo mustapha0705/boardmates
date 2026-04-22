@@ -30,7 +30,6 @@ function displayNameFromAuthUser(authUser) {
 async function ensureUserProfile(authUser) {
   const id = authUser.id;
   if (!id) {
-    console.error("ensureUserProfile: missing Supabase user id");
     return null;
   }
 
@@ -112,7 +111,6 @@ export async function requireAuth(req, res, next) {
     }
 
     if (!isAuthSignup && !profile) {
-      console.error("requireAuth: could not load or create user profile for id", authUser.id);
       return res.status(500).json({ message: "Could not load your account. Try again in a moment." });
     }
 

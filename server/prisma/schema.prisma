@@ -39,6 +39,8 @@ model Game {
   timeControl   String     @map("time_control")
   averageRating Int?       @map("average_rating")
   reviewNotes   String?    @map("review_notes")
+  /// Full move tree (mainline + reviewer sidelines) and per-node comment text, saved when review is completed
+  analysisTree  Json?      @map("analysis_tree")
   createdAt     DateTime   @default(now()) @map("created_at")
   claimedAt     DateTime?  @map("claimed_at")
   completedAt   DateTime?  @map("completed_at")

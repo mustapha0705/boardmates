@@ -9,7 +9,7 @@ function clampLimit(raw) {
   return Math.min(Math.max(n, 1), MAX_LIMIT);
 }
 
-function formatGame(game, { includePgn = false, includeComments = false } = {}) {
+function formatGame(game, { includePgn = false, includeComments = false, includeAnalysisTree = false } = {}) {
   const out = {
     id: game.id,
     title: game.title,
@@ -25,6 +25,10 @@ function formatGame(game, { includePgn = false, includeComments = false } = {}) 
   };
 
   if (includePgn) out.pgn = game.pgn;
+
+  if (includeAnalysisTree && game.analysisTree != null) {
+    out.analysisTree = game.analysisTree;
+  }
 
   if (includeComments && game.comments) {
     out.comments = game.comments.map((c) => ({
@@ -108,7 +112,9 @@ export async function getGame(req, res) {
       return res.status(404).json({ message: "Game not found" });
     }
 
-    return res.json(formatGame(game, { includePgn: true, includeComments: true }));
+    return res.json(
+      formatGame(game, { includePgn: true, includeComments: true, includeAnalysisTree: true }),
+    );
   } catch (err) {
     console.error("getGame error:", err);
     return res.status(500).json({ message: "Failed to fetch game" });
@@ -244,19 +250,28 @@ export async function completeReview(req, res) {
     if (game.status !== "in_review") return res.status(409).json({ message: "Game is not in review" });
     if (game.reviewerId !== req.user.id) return res.status(403).json({ message: "Only the assigned reviewer can complete this review" });
 
+    const { analysisTree } = req.body || {};
+    const data = {
+      status: "completed",
+      completedAt: new Date(),
+    };
+    if (analysisTree != null && typeof analysisTree === "object" && !Array.isArray(analysisTree)) {
+      data.analysisTree = analysisTree;
+    }
+
     const updated = await prisma.game.update({
       where: { id: game.id },
-      data: {
-        status: "completed",
-        completedAt: new Date(),
-      },
+      data,
       include: {
         author: { select: AUTHOR_SELECT },
         reviewer: { select: AUTHOR_SELECT },
+        comments: { orderBy: { ply: "asc" } },
       },
     });
 
-    return res.json(formatGame(updated));
+    return res.json(
+      formatGame(updated, { includePgn: true, includeComments: true, includeAnalysisTree: true }),
+    );
   } catch (err) {
     console.error("completeReview error:", err);
     return res.status(500).json({ message: "Failed to complete review" });
