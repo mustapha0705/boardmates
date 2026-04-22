@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
-import { fetchGame, completeReview, upsertComment } from "../services/api";
+import { fetchGame, completeReview, upsertComment, saveReviewAnalysisDraft } from "../services/api";
 import useAnalysisTree, { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
@@ -12,10 +12,24 @@ import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 import { serializeAnalysisTreeNode } from "../utils/analysisTree";
 
-function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComment, savingComment }) {
+function ReviewGameInner({
+  game,
+  onCompleteWithAnalysis,
+  completing,
+  completeError,
+  onSaveComment,
+  savingComment,
+}) {
+  const queryClient = useQueryClient();
   const { viewerId } = useAuth();
-  const tree = useAnalysisTree(null, game?.pgn);
+  const tree = useAnalysisTree({
+    pgn: game?.pgn,
+    serverAnalysisJson: game?.analysisTree ?? null,
+    serverComments: game?.comments ?? [],
+  });
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const { structureVersion, getSerializedTree } = tree;
 
   useKeyboardNav({
     onFirst: tree.goToFirst,
@@ -24,12 +38,23 @@ function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComme
     onLast: tree.goToLast,
   });
 
-  const title = game?.title || "Game Review";
-  const authorName = game?.author?.displayName ?? "Unknown";
-  const subtitle = game ? `${game.timeControl} · Submitted by ${authorName}` : "";
+  useEffect(() => {
+    if (structureVersion < 1) return;
+    if (!game?.id || game.status !== "in_review") return;
+    if (game.reviewer?.id !== viewerId) return;
 
-  const isInReview = game?.status === "in_review";
-  const isMyReview = game?.reviewer?.id === viewerId;
+    const t = setTimeout(() => {
+      const payload = getSerializedTree();
+      if (!payload) return;
+      saveReviewAnalysisDraft(game.id, payload)
+        .then((updated) => {
+          queryClient.setQueryData(["game", game.id], updated);
+        })
+        .catch(() => {});
+    }, 1100);
+
+    return () => clearTimeout(t);
+  }, [structureVersion, game?.id, game?.status, game?.reviewer?.id, viewerId, queryClient, getSerializedTree]);
 
   const handleSaveComment = useCallback(
     (text) => {
@@ -40,11 +65,27 @@ function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComme
           ply: node.ply,
           san: node.san || null,
           comment: text,
+          analysisTree: getSerializedTree(),
         });
       }
     },
-    [tree, game?.id, onSaveComment],
+    [tree, game?.id, onSaveComment, getSerializedTree],
   );
+
+  const title = game?.title || "Game Review";
+  const authorName = game?.author?.displayName ?? "Unknown";
+  const subtitle = game ? `${game.timeControl} · Submitted by ${authorName}` : "";
+
+  const isInReview = game?.status === "in_review";
+  const isMyReview = game?.reviewer?.id === viewerId;
+
+  if (!tree.root) {
+    return (
+      <main className="review-container">
+        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Preparing board…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="review-container">
@@ -59,6 +100,7 @@ function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComme
           )}
           {isInReview && isMyReview && !showConfirm && (
             <button
+              type="button"
               className="complete-review-btn"
               onClick={() => setShowConfirm(true)}
             >
@@ -71,6 +113,11 @@ function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComme
           {isInReview && isMyReview && showConfirm && (
             <div className="complete-confirm">
               <span className="confirm-text">Mark as completed?</span>
+              {completeError && (
+                <span style={{ display: "block", marginBottom: 8, color: "#b42318", fontSize: 13 }}>
+                  {completeError}
+                </span>
+              )}
               <button
                 className="confirm-yes-btn"
                 type="button"
@@ -80,6 +127,7 @@ function ReviewGameInner({ game, onCompleteWithAnalysis, completing, onSaveComme
                 {completing ? "Finishing…" : "Yes, finish"}
               </button>
               <button
+                type="button"
                 className="confirm-no-btn"
                 onClick={() => setShowConfirm(false)}
               >
@@ -140,6 +188,7 @@ export default function ReviewGame() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [completeError, setCompleteError] = useState("");
 
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
@@ -149,22 +198,30 @@ export default function ReviewGame() {
   const completeMutation = useMutation({
     mutationFn: (analysisTree) => completeReview(id, { analysisTree }),
     onSuccess: () => {
+      setCompleteError("");
       queryClient.invalidateQueries({ queryKey: ["games"] });
       queryClient.invalidateQueries({ queryKey: ["game", id] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       navigate("/");
     },
+    onError: (err) => {
+      setCompleteError(err.message || "Could not complete review. Try again.");
+    },
   });
 
   const commentMutation = useMutation({
     mutationFn: (data) => upsertComment(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", id] });
+    onSuccess: (data) => {
+      if (data?.game) {
+        queryClient.setQueryData(["game", id], data.game);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["game", id] });
+      }
     },
   });
 
   const handleSaveComment = useCallback(
-    (data) => commentMutation.mutate(data),
+    (payload) => commentMutation.mutate(payload),
     [commentMutation],
   );
 
@@ -188,7 +245,11 @@ export default function ReviewGame() {
     <ReviewGameInner
       key={id}
       game={game}
-      onCompleteWithAnalysis={(analysisTree) => completeMutation.mutate(analysisTree)}
+      onCompleteWithAnalysis={(analysisTree) => {
+        setCompleteError("");
+        completeMutation.mutate(analysisTree);
+      }}
+      completeError={completeError}
       completing={completeMutation.isPending}
       onSaveComment={handleSaveComment}
       savingComment={commentMutation.isPending}

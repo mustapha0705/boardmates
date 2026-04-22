@@ -78,6 +78,13 @@ export function completeReview(gameId, body = {}) {
   });
 }
 
+export function saveReviewAnalysisDraft(gameId, analysisTree) {
+  return request(`/games/${gameId}/review-analysis`, {
+    method: "PATCH",
+    body: JSON.stringify({ analysisTree }),
+  });
+}
+
 export function unclaimReview(gameId) {
   return request(`/games/${gameId}/unclaim`, { method: "POST" });
 }
@@ -88,10 +95,10 @@ export function fetchComments(gameId) {
   return request(`/games/${gameId}/comments`);
 }
 
-export function upsertComment(gameId, { ply, san, comment }) {
+export function upsertComment(gameId, { ply, san, comment, analysisTree }) {
   return request(`/games/${gameId}/comments`, {
     method: "PUT",
-    body: JSON.stringify({ ply, san, comment }),
+    body: JSON.stringify({ ply, san, comment, analysisTree }),
   });
 }
 
