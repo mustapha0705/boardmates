@@ -306,6 +306,66 @@ export async function unclaimGame(req, res) {
   }
 }
 
+// ─── Review Comments / analysis draft (in_review) ────────────────────
+
+const GAME_EAGER = {
+  author: { select: AUTHOR_SELECT },
+  reviewer: { select: AUTHOR_SELECT },
+  comments: { orderBy: { ply: "asc" } },
+};
+
+function isValidAnalysisTreePayload(value) {
+  return value != null && typeof value === "object" && !Array.isArray(value) && "fen" in value;
+}
+
+async function persistAnalysisTreeDraft(gameId, tree) {
+  if (!isValidAnalysisTreePayload(tree)) return;
+  await prisma.game.update({
+    where: { id: gameId },
+    data: { analysisTree: tree },
+  });
+}
+
+export async function saveReviewAnalysisDraft(req, res) {
+  try {
+    const game = await prisma.game.findUnique({ where: { id: req.params.id } });
+
+    if (!game) return res.status(404).json({ message: "Game not found" });
+    if (game.status !== "in_review") {
+      return res.status(409).json({ message: "Analysis can only be updated while the game is in review" });
+    }
+    if (game.reviewerId !== req.user.id) {
+      return res.status(403).json({ message: "Only the assigned reviewer can update the analysis" });
+    }
+
+    const { analysisTree } = req.body || {};
+    if (!isValidAnalysisTreePayload(analysisTree)) {
+      return res.status(400).json({ message: "analysisTree (object with root fen) is required" });
+    }
+
+    await persistAnalysisTreeDraft(game.id, analysisTree);
+
+    const fresh = await prisma.game.findUnique({
+      where: { id: game.id },
+      include: GAME_EAGER,
+    });
+
+    return res.json(
+      formatGame(fresh, { includePgn: true, includeComments: true, includeAnalysisTree: true }),
+    );
+  } catch (err) {
+    console.error("saveReviewAnalysisDraft error:", err);
+    return res.status(500).json({ message: "Failed to save analysis" });
+  }
+}
+
+async function fetchGameForClient(id) {
+  return prisma.game.findUnique({
+    where: { id },
+    include: GAME_EAGER,
+  });
+}
+
 // ─── Review Comments ─────────────────────────────────────────────────
 
 export async function listComments(req, res) {
@@ -346,7 +406,7 @@ export async function upsertComment(req, res) {
     if (game.status !== "in_review") return res.status(409).json({ message: "Comments can only be added while the game is in review" });
     if (game.reviewerId !== req.user.id) return res.status(403).json({ message: "Only the assigned reviewer can add comments" });
 
-    const { ply, san, comment } = req.body;
+    const { ply, san, comment, analysisTree: bodyAnalysisTree } = req.body;
 
     if (ply === undefined || ply === null) {
       return res.status(400).json({ message: "Validation failed", errors: [{ field: "ply", message: "ply is required" }] });
@@ -362,7 +422,17 @@ export async function upsertComment(req, res) {
         await prisma.reviewComment.delete({ where: { id: existing.id } });
       }
 
-      return res.json({ deleted: true, ply, san: san || null });
+      if (isValidAnalysisTreePayload(bodyAnalysisTree)) {
+        await persistAnalysisTreeDraft(game.id, bodyAnalysisTree);
+      }
+
+      const full = await fetchGameForClient(req.params.id);
+      return res.json({
+        deleted: true,
+        ply,
+        san: san || null,
+        game: formatGame(full, { includePgn: true, includeComments: true, includeAnalysisTree: true }),
+      });
     }
 
     const result = await prisma.reviewComment.upsert({
@@ -379,6 +449,12 @@ export async function upsertComment(req, res) {
       },
     });
 
+    if (isValidAnalysisTreePayload(bodyAnalysisTree)) {
+      await persistAnalysisTreeDraft(game.id, bodyAnalysisTree);
+    }
+
+    const full = await fetchGameForClient(req.params.id);
+
     return res.json({
       id: result.id,
       ply: result.ply,
@@ -386,6 +462,7 @@ export async function upsertComment(req, res) {
       comment: result.comment,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
+      game: formatGame(full, { includePgn: true, includeComments: true, includeAnalysisTree: true }),
     });
   } catch (err) {
     console.error("upsertComment error:", err);

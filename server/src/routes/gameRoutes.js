@@ -11,6 +11,7 @@ import {
   unclaimGame,
   listComments,
   upsertComment,
+  saveReviewAnalysisDraft,
 } from "../controllers/gameController.js";
 
 const router = Router();
@@ -27,6 +28,7 @@ router.delete("/:id", auth, deleteGame);
 router.post("/:id/claim", auth, claimGame);
 router.post("/:id/complete", auth, completeReview);
 router.post("/:id/unclaim", auth, unclaimGame);
+router.patch("/:id/review-analysis", auth, saveReviewAnalysisDraft);
 
 // Comments
 router.get("/:id/comments", listComments);
