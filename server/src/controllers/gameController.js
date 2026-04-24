@@ -37,6 +37,7 @@ function clampLimit(raw) {
 function formatGame(game, { includePgn = false, includeComments = false, includeAnalysisTree = false } = {}) {
   const out = {
     id: game.id,
+    authorId: game.authorId,
     title: game.title,
     status: game.status,
     timeControl: game.timeControl,
