@@ -140,6 +140,7 @@ export default function GameDetail() {
         <div className="left-column">
           <ChessBoard
             fen={activeNode.fen}
+            currentNode={activeNode}
             onMove={NOOP}
             onFirst={goToFirst}
             onPrev={goToPrev}

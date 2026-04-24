@@ -29,6 +29,7 @@ const SkipForward = () => (
 
 export default function ChessBoard({
   fen,
+  currentNode = null,
   onMove,
   onFirst,
   onPrev,
@@ -43,7 +44,7 @@ export default function ChessBoard({
   const pendingFenRef = useRef(null);
   const selectedSquareRef = useRef(null);
 
-  propsRef.current = { fen, onMove, readOnly };
+  propsRef.current = { fen, currentNode, onMove, readOnly };
 
   const clearHighlights = useCallback(() => {
     const el = boardElRef.current;
@@ -59,6 +60,22 @@ export default function ChessBoard({
     const sq = el.querySelector(`[data-square="${square}"]`);
     if (sq) sq.classList.add("square-highlight");
   }, []);
+
+  const highlightCurrentMove = useCallback(
+    (node) => {
+      if (!node?.parent || !node?.san) return;
+      try {
+        const game = new Chess(node.parent.fen);
+        const move = game.move(node.san);
+        if (!move) return;
+        highlightSquare(move.from);
+        highlightSquare(move.to);
+      } catch {
+        // ignore malformed node state
+      }
+    },
+    [highlightSquare],
+  );
 
   useEffect(() => {
     const el = boardElRef.current;
@@ -160,6 +177,8 @@ export default function ChessBoard({
       });
 
       boardRef.current = board;
+      clearHighlights();
+      highlightCurrentMove(propsRef.current.currentNode);
     }
 
     init();
@@ -171,15 +190,16 @@ export default function ChessBoard({
         boardRef.current = null;
       }
     };
-  }, [clearHighlights, highlightSquare]);
+  }, [clearHighlights, highlightCurrentMove, highlightSquare]);
 
   useEffect(() => {
     selectedSquareRef.current = null;
     clearHighlights();
     if (boardRef.current) {
       boardRef.current.position(fen, false);
+      highlightCurrentMove(currentNode);
     }
-  }, [fen, clearHighlights]);
+  }, [fen, currentNode, clearHighlights, highlightCurrentMove]);
 
   return (
     <div className="board-card">

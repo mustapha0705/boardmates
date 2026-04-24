@@ -166,6 +166,7 @@ function ReviewGameInner({
         <div className="left-column">
           <ChessBoard
             fen={tree.currentNode.fen}
+            currentNode={tree.currentNode}
             onMove={tree.makeMove}
             onFirst={tree.goToFirst}
             onPrev={tree.goToPrev}
