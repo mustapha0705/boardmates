@@ -1,5 +1,22 @@
 import { prisma } from "../../config/db.js";
 
+const PLATFORMS = new Set(["chess_com", "lichess"]);
+
+function normalizeSignupBody(body) {
+  const rawPlatform = body.chessPlatform ?? body.chess_platform;
+  const chessUsername =
+    body.chessUsername != null
+      ? String(body.chessUsername).trim()
+      : body.chess_username != null
+        ? String(body.chess_username).trim()
+        : "";
+
+  const platform =
+    rawPlatform != null && String(rawPlatform).trim() !== "" ? String(rawPlatform).trim() : null;
+
+  return { chessUsername, platform };
+}
+
 export async function signup(req, res) {
   try {
     const supabaseUser = req.authUser;
@@ -8,22 +25,31 @@ export async function signup(req, res) {
       where: { id: supabaseUser.id },
     });
 
-    const { displayName, chessUsername, rating } = req.body;
+    const { chessUsername, platform } = normalizeSignupBody(req.body);
 
-    if (!displayName || displayName.trim().length < 2) {
+    if (!platform || !PLATFORMS.has(platform)) {
       return res.status(400).json({
         message: "Validation failed",
-        errors: [{ field: "displayName", message: "Display name is required (min 2 characters)" }],
+        errors: [{ field: "chessPlatform", message: "Choose Chess.com or Lichess" }],
       });
     }
+
+    if (!chessUsername || chessUsername.length < 2) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: [{ field: "chessUsername", message: "Username is required (min 2 characters)" }],
+      });
+    }
+
+    const displayName = chessUsername;
 
     if (existing) {
       const updated = await prisma.user.update({
         where: { id: existing.id },
         data: {
-          displayName: displayName.trim(),
-          chessUsername: chessUsername?.trim() || null,
-          rating: rating ? parseInt(rating, 10) : null,
+          displayName,
+          chessUsername,
+          chessPlatform: platform,
         },
       });
       return res.status(200).json(formatUser(updated));
@@ -33,9 +59,9 @@ export async function signup(req, res) {
       data: {
         id: supabaseUser.id,
         email: supabaseUser.email,
-        displayName: displayName.trim(),
-        chessUsername: chessUsername?.trim() || null,
-        rating: rating ? parseInt(rating, 10) : null,
+        displayName,
+        chessUsername,
+        chessPlatform: platform,
       },
     });
 
@@ -65,7 +91,7 @@ export async function updateProfile(req, res) {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    const { displayName, chessUsername, rating } = req.body;
+    const { displayName, chessUsername, chessPlatform } = req.body;
     const updates = {};
 
     if (displayName !== undefined) {
@@ -79,11 +105,26 @@ export async function updateProfile(req, res) {
     }
 
     if (chessUsername !== undefined) {
-      updates.chessUsername = chessUsername?.trim() || null;
+      const u = chessUsername?.trim() || "";
+      if (u.length < 2) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: [{ field: "chessUsername", message: "Username must be at least 2 characters" }],
+        });
+      }
+      updates.chessUsername = u;
+      updates.displayName = u;
     }
 
-    if (rating !== undefined) {
-      updates.rating = rating ? parseInt(rating, 10) : null;
+    if (chessPlatform !== undefined) {
+      const p = chessPlatform != null ? String(chessPlatform).trim() : "";
+      if (!p || !PLATFORMS.has(p)) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: [{ field: "chessPlatform", message: "Invalid platform" }],
+        });
+      }
+      updates.chessPlatform = p;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -108,7 +149,7 @@ function formatUser(user) {
     email: user.email,
     displayName: user.displayName,
     chessUsername: user.chessUsername,
-    rating: user.rating,
+    chessPlatform: user.chessPlatform,
     createdAt: user.createdAt,
   };
 }

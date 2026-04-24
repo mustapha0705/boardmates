@@ -49,7 +49,7 @@ async function ensureUserProfile(authUser) {
         email: primaryEmail,
         displayName,
         chessUsername: null,
-        rating: null,
+        chessPlatform: null,
       },
     });
   } catch (err) {
@@ -64,7 +64,7 @@ async function ensureUserProfile(authUser) {
             email: `${id}@users.local`,
             displayName,
             chessUsername: null,
-            rating: null,
+            chessPlatform: null,
           },
         });
       } catch (err2) {
