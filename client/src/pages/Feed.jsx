@@ -74,8 +74,8 @@ export default function Feed() {
 
   return (
     <main className="feed">
-      <h1 className="feed-heading">Review Feed</h1>
-      <p className="feed-sub">Games waiting for your strategic feedback</p>
+      {/* <h1 className="feed-heading">Review Feed</h1>
+      <p className="feed-sub">Games waiting for your strategic feedback</p> */}
 
       {claimError && (
         <div className="feed-claim-error" role="alert">

@@ -100,7 +100,7 @@ export default function SubmitGame() {
         <main className="container">
           <div className="title-section">
             <h1>Submit a Game</h1>
-            <p>Share your chess match for analysis or community review.</p>
+            <p>Share your chess game for human review.</p>
           </div>
 
           {error && <div className="submit-error">{error}</div>}
@@ -240,7 +240,7 @@ export default function SubmitGame() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Must-win prep game"
+                placeholder="might help identify game"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 maxLength={120}

@@ -28,7 +28,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
           {!collapsed && (
             <div className="logo-text">
               <h2>Boardmates</h2>
-              <span>Chess MVP</span>
+              <span>Chess</span>
             </div>
           )}
         </div>

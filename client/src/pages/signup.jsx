@@ -88,7 +88,7 @@ export default function Signup() {
             </div>
             <div>
               <div className="auth-logo-text">Boardmates</div>
-              <div className="auth-logo-sub">Chess MVP</div>
+              <div className="auth-logo-sub">Chess</div>
             </div>
           </div>
 

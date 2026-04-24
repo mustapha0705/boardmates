@@ -51,7 +51,7 @@ export default function Login() {
             </div>
             <div>
               <div className="auth-logo-text">Boardmates</div>
-              <div className="auth-logo-sub">Chess MVP</div>
+              <div className="auth-logo-sub">Chess</div>
             </div>
           </div>
 
