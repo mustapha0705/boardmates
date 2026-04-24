@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Chess } from "chess.js";
 import { createGame } from "../services/api";
 import "../styles/submit-game.css";
 
@@ -13,42 +12,6 @@ const TIME_CONTROL_LABELS = {
   daily: "1d",
 };
 
-const OPENING_NAMES = [
-  "Sicilian Najdorf Battle",
-  "Queen's Gambit Encounter",
-  "King's Indian Clash",
-  "London System Grind",
-  "Italian Game Study",
-  "Caro-Kann Defense",
-  "Ruy Lopez Exchange",
-  "French Defense Struggle",
-  "Catalan Opening Adventure",
-  "Scandinavian Defense Play",
-  "Nimzo-Indian Classical",
-  "Dutch Defense Gambit",
-  "English Opening Sideline",
-  "Benoni Counterattack",
-  "Pirc Defense Encounter",
-  "Grünfeld Exchange",
-  "Slav Defense Encounter",
-  "Alekhine Defense Study",
-  "Bird's Opening Surprise",
-  "Philidor Defense Battle",
-];
-
-function generateTitle(headers) {
-  if (headers.Event && headers.Event !== "?") return headers.Event;
-  if (
-    headers.White &&
-    headers.Black &&
-    headers.White !== "?" &&
-    headers.Black !== "?"
-  ) {
-    return `${headers.White} vs. ${headers.Black}`;
-  }
-  return OPENING_NAMES[Math.floor(Math.random() * OPENING_NAMES.length)];
-}
-
 export default function SubmitGame() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,6 +22,7 @@ export default function SubmitGame() {
   const [fileContent, setFileContent] = useState("");
   const [averageRating, setAverageRating] = useState("1200");
   const [timeControl, setTimeControl] = useState("blitz");
+  const [customTitle, setCustomTitle] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
@@ -119,22 +83,10 @@ export default function SubmitGame() {
     }
 
     setError("");
-
-    const chess = new Chess();
-    let headers = {};
-
-    try {
-      chess.loadPgn(pgn);
-      headers = chess.header() || {};
-    } catch {
-      // PGN may have issues but we still allow submission
-    }
-
-    const title = generateTitle(headers);
     const tc = TIME_CONTROL_LABELS[timeControl] || timeControl;
 
     mutation.mutate({
-      title,
+      title: customTitle.trim() || undefined,
       pgn,
       timeControl: tc,
       averageRating: Number(averageRating) || null,
@@ -272,6 +224,29 @@ export default function SubmitGame() {
           </div>
 
           <div className="form-grid">
+            <div className="form-group">
+              <label>
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M4 7h16M4 12h12M4 17h9" />
+                </svg>
+                Custom Title (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Must-win prep game"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                maxLength={120}
+              />
+            </div>
+
             <div className="form-group">
               <label>
                 <svg
