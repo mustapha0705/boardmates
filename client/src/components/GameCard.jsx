@@ -3,16 +3,18 @@ import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
 
 export default function GameCard({ game, currentUserId, authLoading, onStartReview, claiming }) {
-  const { id, title, submittedAt, timeControl, status, reviewer, author } = game;
+  const { id, authorId, title, submittedAt, timeControl, status, reviewer, author } = game;
   const badge = STATUS_CONFIG[status];
 
-  const authorName = author?.displayName ?? author ?? "Unknown";
-  const reviewerName = reviewer?.displayName ?? reviewer ?? null;
   const hasUserId = currentUserId != null && currentUserId !== "";
+  const isAuthor =
+    hasUserId &&
+    (authorId === currentUserId ||
+      (author && (author.id === currentUserId || author === currentUserId)));
+  const authorName = isAuthor ? "you" : author?.displayName ?? author ?? "Unknown";
+  const reviewerName = reviewer?.displayName ?? reviewer ?? null;
   const isReviewer =
     hasUserId && reviewer && (reviewer.id === currentUserId || reviewer === currentUserId);
-  const isAuthor =
-    hasUserId && author && (author.id === currentUserId || author === currentUserId);
 
   let cta;
   if (status === "pending" && authLoading) {
