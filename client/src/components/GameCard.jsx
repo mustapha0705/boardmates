@@ -98,7 +98,7 @@ export default function GameCard({ game, currentUserId, authLoading, onStartRevi
             {game.averageRating && (
               <>
                 <span className="dot" />
-                <span className="meta-pill">⭐ {game.averageRating}</span>
+                <span className="meta-pill"> {game.averageRating}</span>
               </>
             )}
             {reviewerName && (
