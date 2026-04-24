@@ -1,4 +1,5 @@
 import { prisma } from "../../config/db.js";
+import { detectOpeningFromPgn } from "../utils/openingDetection.js";
 
 const AUTHOR_SELECT = { id: true, displayName: true };
 const MAX_LIMIT = 50;
@@ -150,7 +151,6 @@ export async function createGame(req, res) {
     const { title, pgn, timeControl, averageRating, reviewNotes } = req.body;
     const errors = [];
 
-    if (!title?.trim()) errors.push({ field: "title", message: "Title is required" });
     if (!pgn?.trim()) errors.push({ field: "pgn", message: "PGN is required" });
     if (!timeControl?.trim()) errors.push({ field: "timeControl", message: "Time control is required" });
 
@@ -158,11 +158,17 @@ export async function createGame(req, res) {
       return res.status(400).json({ message: "Validation failed", errors });
     }
 
+    const cleanPgn = pgn.trim();
+    const cleanTimeControl = timeControl.trim();
+    const customTitle = typeof title === "string" ? title.trim() : "";
+    const detectedOpening = detectOpeningFromPgn(cleanPgn);
+    const resolvedTitle = customTitle || detectedOpening || `Game · ${cleanTimeControl}`;
+
     const game = await prisma.game.create({
       data: {
-        title: title.trim(),
-        pgn: pgn.trim(),
-        timeControl: timeControl.trim(),
+        title: resolvedTitle,
+        pgn: cleanPgn,
+        timeControl: cleanTimeControl,
         averageRating: averageRating ? parseInt(averageRating, 10) : null,
         reviewNotes: reviewNotes?.trim() || null,
         authorId: req.user.id,
