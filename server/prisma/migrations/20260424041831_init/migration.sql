@@ -24,6 +24,7 @@ CREATE TABLE "games" (
     "time_control" TEXT NOT NULL,
     "average_rating" INTEGER,
     "review_notes" TEXT,
+    "analysis_tree" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "claimed_at" TIMESTAMP(3),
     "completed_at" TIMESTAMP(3),
