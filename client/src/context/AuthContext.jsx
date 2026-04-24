@@ -108,9 +108,13 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
 
-    // New account + email confirmation on: user is set, session null.
-    // Same email signed up again: user is null, session null (no email sent; logs show user_repeated_signup).
-    const needsConfirmation = !data.session && !!data.user;
+    // Real new signup (email confirm on): session null and user has email identities.
+    // Repeated signup: often user is null, or Supabase returns a user stub with identities: [] (still user_repeated_signup).
+    const identities = data.user?.identities;
+    const hasIdentities = Array.isArray(identities) && identities.length > 0;
+    const legacyNewUser = !!data.user && identities == null;
+    const needsConfirmation = !data.session && (hasIdentities || legacyNewUser);
+    const repeatedSignup = !data.session && !needsConfirmation;
 
     if (data.session?.access_token) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
@@ -137,18 +141,9 @@ export function AuthProvider({ children }) {
     return {
       ...data,
       needsConfirmation,
-      /** True when Supabase accepted the request but did not create a new user (e.g. email already registered). */
-      repeatedSignup: !data.session && !data.user,
+      /** Email already registered (or no new identity created). */
+      repeatedSignup,
     };
-  }, []);
-
-  const resendSignupEmail = useCallback(async (emailAddress) => {
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: emailAddress,
-      options: { emailRedirectTo: getAuthEmailRedirectTo() },
-    });
-    if (error) throw error;
   }, []);
 
   const signIn = useCallback(async ({ email, password }) => {
@@ -181,7 +176,6 @@ export function AuthProvider({ children }) {
         loading,
         isAuthenticated: !!session,
         signUp,
-        resendSignupEmail,
         signIn,
         signOut,
         refreshProfile,

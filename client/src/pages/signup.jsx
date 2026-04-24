@@ -3,6 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import "../styles/auth.css";
 
+function formatSignupError(err) {
+  const raw = err?.message || "";
+  const m = raw.toLowerCase();
+  if (m.includes("rate limit")) {
+    return "email rate limit exceeded";
+  }
+  return raw || "Signup failed";
+}
+
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,15 +20,11 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  /** null | "verify_email" (new user, mail may be sent) | "repeat" (address already in Supabase; no signup email) */
+  /** null | "verify_email" | "repeat" */
   const [afterSignup, setAfterSignup] = useState(null);
 
-  const { signUp, resendSignupEmail } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
-  const [resendState, setResendState] = useState({ status: "idle", message: "" });
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-  const localSupabaseDev = /127\.0\.0\.1:54321|localhost:54321/.test(supabaseUrl);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,7 +66,7 @@ export default function Signup() {
         navigate("/", { replace: true });
       }
     } catch (err) {
-      setError(err.message || "Signup failed");
+      setError(formatSignupError(err));
     } finally {
       setSubmitting(false);
     }
@@ -90,14 +95,14 @@ export default function Signup() {
           <div className="signup-title">
             <h1>
               {afterSignup === "repeat"
-                ? "This email is already registered"
+                ? "This email is already in use"
                 : afterSignup === "verify_email"
                   ? "Check your inbox"
                   : "Create your account"}
             </h1>
             <p>
               {afterSignup === "repeat"
-                ? `That address is already registered. Submitting the sign-up form again does not send another confirmation email. Sign in, or use resend if you never verified.`
+                ? "An account with this email already exists. Sign in instead, or use a different address."
                 : afterSignup === "verify_email"
                   ? `We've sent a confirmation link to ${email}. Click the link in the email to activate your account.`
                   : "Sign up with email to share games and get them reviewed."}
@@ -112,120 +117,14 @@ export default function Signup() {
               </svg>
               {afterSignup === "repeat" ? (
                 <p className="auth-confirmation-hint">
-                  <Link to="/login" className="auth-link-btn" style={{ display: "inline" }}>
-                    Go to sign in
-                  </Link>
-                  {" "}with this email. If you still need a confirmation link and the account is unverified, try{" "}
                   <button
                     type="button"
                     className="auth-link-btn"
-                    disabled={resendState.status === "sending"}
-                    onClick={async () => {
-                      setResendState({ status: "sending", message: "" });
-                      try {
-                        await resendSignupEmail(email);
-                        setResendState({
-                          status: "sent",
-                          message: "If the account exists and is unconfirmed, a message may arrive shortly.",
-                        });
-                      } catch (err) {
-                        setResendState({
-                          status: "error",
-                          message: err.message || "Could not resend.",
-                        });
-                      }
-                    }}
+                    onClick={() => setAfterSignup(null)}
                   >
-                    {resendState.status === "sending" ? "Sending…" : "resend confirmation email"}
-                  </button>
-                  . To start over, an admin can delete the user in the Supabase dashboard (Authentication → Users).{" "}
-                  <button
-                    type="button"
-                    className="auth-link-btn"
-                    onClick={() => {
-                      setAfterSignup(null);
-                      setResendState({ status: "idle", message: "" });
-                    }}
-                  >
-                    Use a different email
+                    Try a different email
                   </button>
                 </p>
-              ) : (
-              <p className="auth-confirmation-hint">
-                Didn&apos;t receive the email? Check spam, wait a few minutes (default mail can be slow), or{" "}
-                <button
-                  type="button"
-                  className="auth-link-btn"
-                  disabled={resendState.status === "sending"}
-                  onClick={async () => {
-                    setResendState({ status: "sending", message: "" });
-                    try {
-                      await resendSignupEmail(email);
-                      setResendState({
-                        status: "sent",
-                        message: "If delivery is working, another message should arrive shortly.",
-                      });
-                    } catch (err) {
-                      setResendState({
-                        status: "error",
-                        message: err.message || "Could not resend. Check Supabase Auth logs.",
-                      });
-                    }
-                  }}
-                >
-                  {resendState.status === "sending" ? "Sending…" : "resend confirmation email"}
-                </button>
-                . You can also{" "}
-                <button type="button" className="auth-link-btn" onClick={() => { setAfterSignup(null); setResendState({ status: "idle", message: "" }); }}>
-                  try signing up again
-                </button>
-                .
-              </p>
-              )}
-              {resendState.message ? (
-                <p className={`auth-resend-msg ${resendState.status === "error" ? "auth-error" : "auth-resend-ok"}`}>
-                  {resendState.message}
-                </p>
-              ) : null}
-              {afterSignup === "verify_email" ? (
-                localSupabaseDev ? (
-                  <p className="auth-troubleshooting">
-                    Local Supabase: messages are not sent to a real inbox. Open the{" "}
-                    <strong>Inbucket</strong> UI (often{" "}
-                    <a href="http://127.0.0.1:54324" target="_blank" rel="noreferrer">
-                      http://127.0.0.1:54324
-                    </a>
-                    ) to read the confirmation email.
-                  </p>
-                ) : (
-                  <details className="auth-troubleshooting">
-                    <summary>Still nothing? (Supabase project checks)</summary>
-                    <ul>
-                      <li>
-                        Dashboard → <strong>Authentication</strong> → <strong>URL Configuration</strong>: add your app URL
-                        to <strong>Redirect URLs</strong> (e.g. <code>http://localhost:5173/**</code>). If you use{" "}
-                        <code>127.0.0.1</code> in the browser, add that too—or set{" "}
-                        <code>VITE_AUTH_EMAIL_REDIRECT_ORIGIN</code> in <code>.env</code> to match what you allowlisted.
-                      </li>
-                      <li>
-                        Dashboard → <strong>Logs</strong> → <strong>Auth</strong>: look for errors when you sign up (SMTP /
-                        rate limits).
-                      </li>
-                      <li>
-                        Default Supabase email is rate-limited and often filtered. For reliable delivery, configure{" "}
-                        <strong>custom SMTP</strong> (see{" "}
-                        <a href="https://supabase.com/docs/guides/auth/auth-smtp" target="_blank" rel="noreferrer">
-                          Supabase SMTP docs
-                        </a>
-                        ).
-                      </li>
-                      <li>
-                        For local MVP only: Dashboard → <strong>Authentication</strong> → <strong>Providers</strong> →{" "}
-                        <strong>Email</strong> → turn off <strong>Confirm email</strong> so sign-in works without mail.
-                      </li>
-                    </ul>
-                  </details>
-                )
               ) : null}
               <Link to="/login" className="primary-btn" style={{ display: "inline-block", textAlign: "center", textDecoration: "none", marginTop: 8 }}>
                 Go to login
