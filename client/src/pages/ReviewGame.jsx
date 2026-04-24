@@ -108,7 +108,7 @@ function ReviewGameInner({
         </div>
         <div className="review-header-actions">
           {game?.averageRating && (
-            <span className="rating-badge">⭐ {game.averageRating} avg</span>
+            <span className="rating-badge">{game.averageRating} avg</span>
           )}
           {isInReview && isMyReview && !showConfirm && (
             <button
