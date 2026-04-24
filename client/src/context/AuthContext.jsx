@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
-
-const AuthContext = createContext(null);
+import { getAuthEmailRedirectTo } from "../lib/authRedirect";
+import { AuthContext } from "./auth-context";
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
       if (event === "INITIAL_SESSION") return;
       if (s?.access_token) {
         const existing = await fetchProfile(s.access_token);
-        if (!existing && s.user?.user_metadata?.displayName) {
+        if (!existing && s.user?.user_metadata?.chessUsername && s.user?.user_metadata?.chessPlatform) {
           const meta = s.user.user_metadata;
           const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
             method: "POST",
@@ -72,9 +72,8 @@ export function AuthProvider({ children }) {
               Authorization: `Bearer ${s.access_token}`,
             },
             body: JSON.stringify({
-              displayName: meta.displayName,
-              chessUsername: meta.chessUsername || null,
-              rating: meta.rating || null,
+              chessUsername: meta.chessUsername,
+              chessPlatform: meta.chessPlatform,
             }),
           }).catch(() => null);
           if (res?.ok) {
@@ -93,17 +92,25 @@ export function AuthProvider({ children }) {
     };
   }, [fetchProfile]);
 
-  const signUp = useCallback(async ({ email, password, displayName, chessUsername, rating }) => {
+  const signUp = useCallback(async ({ email, password, chessPlatform, chessUsername }) => {
+    const handle = String(chessUsername || "").trim();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { displayName, chessUsername: chessUsername || null, rating: rating ? parseInt(rating, 10) : null },
+        emailRedirectTo: getAuthEmailRedirectTo(),
+        data: {
+          displayName: handle,
+          chessUsername: handle,
+          chessPlatform,
+        },
       },
     });
     if (error) throw error;
 
-    const needsConfirmation = !data.session;
+    // New account + email confirmation on: user is set, session null.
+    // Same email signed up again: user is null, session null (no email sent; logs show user_repeated_signup).
+    const needsConfirmation = !data.session && !!data.user;
 
     if (data.session?.access_token) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
@@ -113,9 +120,8 @@ export function AuthProvider({ children }) {
           Authorization: `Bearer ${data.session.access_token}`,
         },
         body: JSON.stringify({
-          displayName,
-          chessUsername: chessUsername || null,
-          rating: rating ? parseInt(rating, 10) : null,
+          chessUsername: handle,
+          chessPlatform,
         }),
       });
 
@@ -128,21 +134,27 @@ export function AuthProvider({ children }) {
       setProfile(profileData);
     }
 
-    return { ...data, needsConfirmation };
+    return {
+      ...data,
+      needsConfirmation,
+      /** True when Supabase accepted the request but did not create a new user (e.g. email already registered). */
+      repeatedSignup: !data.session && !data.user,
+    };
+  }, []);
+
+  const resendSignupEmail = useCallback(async (emailAddress) => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: emailAddress,
+      options: { emailRedirectTo: getAuthEmailRedirectTo() },
+    });
+    if (error) throw error;
   }, []);
 
   const signIn = useCallback(async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (error) throw error;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -169,8 +181,8 @@ export function AuthProvider({ children }) {
         loading,
         isAuthenticated: !!session,
         signUp,
+        resendSignupEmail,
         signIn,
-        signInWithGoogle,
         signOut,
         refreshProfile,
       }}
@@ -178,10 +190,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }

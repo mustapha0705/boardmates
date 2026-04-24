@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { fetchProfileStats, fetchProfileGames, fetchProfileReviews } from "../services/api";
 import { timeAgo } from "../utils/time";
+import { chessPlatformLabel } from "../utils/chessPlatform";
 import "../styles/profile.css";
 
 const STATUS_BADGE = {
@@ -43,8 +44,9 @@ export default function Profile() {
   const inProgress = inProgressData?.games ?? [];
 
   const displayName = user?.displayName ?? "Player";
+  const platformLine = chessPlatformLabel(user?.chessPlatform);
   const memberSince = user?.createdAt
-    ? new Date(user.createdAt).getFullYear()
+    ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "—";
 
   return (
@@ -60,10 +62,7 @@ export default function Profile() {
               <div className="top-row">
                 <div>
                   <h1>{displayName}</h1>
-                  <p className="subtitle">
-                    {user?.chessUsername && <>{user.chessUsername} · </>}
-                    {user?.rating ? `${user.rating} ELO` : "Chess Enthusiast"}
-                  </p>
+                  {platformLine ? <p className="subtitle">{platformLine}</p> : null}
                   <p className="member">
                     <svg
                       width="13"
