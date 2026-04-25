@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./context/useAuth";
+import { Analytics } from "@vercel/analytics/react";
 import Layout from "./components/Layout.jsx";
 import Feed from "./pages/Feed.jsx";
 import SubmitGame from "./pages/SubmitGame.jsx";
@@ -44,6 +45,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Analytics />
           <Routes>
             <Route
               path="/"
