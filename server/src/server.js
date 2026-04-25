@@ -8,6 +8,11 @@ import gameRoutes from "./routes/gameRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import { connectDB, disconnectDB } from "../config/db.js";
 
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = await import('dotenv');
+  dotenv.config();
+}
+
 const app = express();
 const PORT = process.env.PORT;
 
