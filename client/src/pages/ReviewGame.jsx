@@ -101,6 +101,7 @@ function ReviewGameInner({
 
   return (
     <main className="review-container">
+      <title>Boardmates | Review Game</title>
       <div className="review-header">
         <div>
           <h2 className="review-title">{title}</h2>

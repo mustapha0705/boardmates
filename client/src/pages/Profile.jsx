@@ -51,6 +51,7 @@ export default function Profile() {
 
   return (
     <div className="feed">
+      <title>Boardmates | Profile</title>
       <div className="profile-page">
         <main className="profile-container">
           <section className="profile-header">

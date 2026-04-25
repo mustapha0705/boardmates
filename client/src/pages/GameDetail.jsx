@@ -111,6 +111,7 @@ export default function GameDetail() {
 
   return (
     <main className="review-container">
+      <title>Boardmates | Reviewed Game</title>
       <div className="review-header">
         <div>
           <h2 className="review-title">{title}</h2>

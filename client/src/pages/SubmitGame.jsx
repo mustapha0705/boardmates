@@ -96,6 +96,7 @@ export default function SubmitGame() {
 
   return (
     <div className="feed">
+      <title>Boardmates | Submit Game</title>
       <div className="page">
         <main className="container">
           <div className="title-section">

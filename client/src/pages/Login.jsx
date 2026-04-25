@@ -37,6 +37,7 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      <title>Boardmates | Login</title>
       <div className="login-wrapper">
         <div className="login-card">
 

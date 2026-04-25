@@ -74,6 +74,7 @@ export default function Signup() {
 
   return (
     <div className="signup-page">
+      <title>Boardmates | Signup</title>
       <main className="signup-main">
         <div className="signup-card">
 

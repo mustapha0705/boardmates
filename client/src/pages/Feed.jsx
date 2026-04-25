@@ -74,7 +74,7 @@ export default function Feed() {
 
   return (
     <main className="feed">
-      <title>Boardmates || Feed</title>
+      <title>Boardmates | Feed</title>
       {/* <h1 className="feed-heading">Review Feed</h1>
       <p className="feed-sub">Games waiting for your strategic feedback</p> */}
 

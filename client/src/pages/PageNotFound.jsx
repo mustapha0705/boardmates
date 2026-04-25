@@ -4,6 +4,7 @@ import "../styles/not-found.css";
 export default function PageNotFound() {
   return (
     <div className="nf-page">
+      <title>Boardmates | Page Not Found</title>
       <div className="nf-card">
         <div className="nf-board">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="1.2">
