@@ -2,6 +2,11 @@ import { Link } from "react-router-dom";
 import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
 
+function getInitial(name) {
+  if (!name) return "?";
+  return String(name).trim().charAt(0).toUpperCase() || "?";
+}
+
 export default function GameCard({ game, currentUserId, authLoading, onStartReview, claiming }) {
   const { id, authorId, title, submittedAt, timeControl, status, reviewer, author } = game;
   const badge = STATUS_CONFIG[status];
@@ -12,6 +17,7 @@ export default function GameCard({ game, currentUserId, authLoading, onStartRevi
     (authorId === currentUserId ||
       (author && (author.id === currentUserId || author === currentUserId)));
   const authorName = isAuthor ? "you" : author?.displayName ?? author ?? "Unknown";
+  const authorInitial = getInitial(author?.displayName ?? authorName);
   const reviewerName = reviewer?.displayName ?? reviewer ?? null;
   const isReviewer =
     hasUserId && reviewer && (reviewer.id === currentUserId || reviewer === currentUserId);
@@ -70,17 +76,7 @@ export default function GameCard({ game, currentUserId, authLoading, onStartRevi
     <div className="game-card">
       <div className="card-left">
         <div className="card-icon" aria-hidden="true">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#1a1a2e"
-            strokeWidth="1.5"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M3 9h18M9 3v18" />
-          </svg>
+          <span className="card-icon-initial">{authorInitial}</span>
         </div>
 
         <div>

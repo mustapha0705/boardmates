@@ -58,14 +58,23 @@
   min-width: 0;
 }
 .card-icon {
-  width: 40px;
-  height: 40px;
-  background: color-mix(in srgb, var(--color-brand) 14%, transparent);
-  border-radius: 9px;
+  width: 42px;
+  height: 42px;
+  background: var(--color-brand);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.card-icon-initial {
+  font-family: "DM Serif Display", serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-brand-contrast);
+  line-height: 1;
+  text-transform: uppercase;
 }
 .card-date {
   font-size: 11px;
