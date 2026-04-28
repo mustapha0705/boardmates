@@ -12,6 +12,8 @@ import ReviewGame from "./pages/ReviewGame.jsx";
 import GameDetail from "./pages/GameDetail.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/signup.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import "./App.css";
 
 function RequireAuth({ children }) {
@@ -79,6 +81,8 @@ function App() {
                 </RedirectIfAuth>
               }
             />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </AuthProvider>

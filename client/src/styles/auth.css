@@ -255,6 +255,16 @@
   margin-bottom: 16px;
 }
 
+.auth-success {
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+  border: 1px solid color-mix(in srgb, #16a34a 36%, transparent);
+  color: #166534;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
 /* Email confirmation */
 .auth-confirmation {
   text-align: center;

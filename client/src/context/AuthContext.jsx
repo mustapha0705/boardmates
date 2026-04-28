@@ -152,6 +152,19 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const requestPasswordReset = useCallback(async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: getAuthEmailRedirectTo("/reset-password"),
+    });
+    if (error) throw error;
+  }, []);
+
+  const updatePassword = useCallback(async (password) => {
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    return data;
+  }, []);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -177,6 +190,8 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!session,
         signUp,
         signIn,
+        requestPasswordReset,
+        updatePassword,
         signOut,
         refreshProfile,
       }}

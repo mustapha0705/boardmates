@@ -14,6 +14,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
+  const passwordResetSuccess = location.state?.passwordResetSuccess;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,6 +62,10 @@ export default function Login() {
             <p>Please enter your details to sign in.</p>
           </div>
 
+          {passwordResetSuccess ? (
+            <div className="auth-success">Password updated successfully. You can now sign in.</div>
+          ) : null}
+
           {error && <div className="auth-error">{error}</div>}
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -85,7 +90,7 @@ export default function Login() {
             <div className="form-group">
               <div className="label-row">
                 <label>Password</label>
-                <a href="#">Forgot password?</a>
+                <Link to="/forgot-password">Forgot password?</Link>
               </div>
               <div className="password-wrapper">
                 <input
