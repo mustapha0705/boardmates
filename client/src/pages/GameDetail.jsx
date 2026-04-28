@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { fetchGame } from "../services/api";
+import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { claimReview, fetchGame } from "../services/api";
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
+import { useAuth } from "../context/useAuth";
 import "../styles/game-review.css";
 import { Chess } from "chess.js";
 import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
@@ -56,6 +57,9 @@ const NOOP = () => null;
 
 export default function GameDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { viewerId } = useAuth();
 
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
@@ -72,7 +76,21 @@ export default function GameDetail() {
   }, [game]);
 
   const [currentNode, setCurrentNode] = useState(null);
+  const [claimError, setClaimError] = useState("");
   const activeNode = currentNode ?? root;
+
+  const claimMutation = useMutation({
+    mutationFn: claimReview,
+    onSuccess: () => {
+      setClaimError("");
+      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: ["game", id] });
+      navigate(`/review-game/${id}`, { replace: true });
+    },
+    onError: (err) => {
+      setClaimError(err.message || "Could not claim this game.");
+    },
+  });
 
   const goToFirst = useCallback(() => setCurrentNode(root), [root]);
   const goToPrev = useCallback(() => setCurrentNode((n) => (n ?? root)?.parent || n || root), [root]);
@@ -108,6 +126,8 @@ export default function GameDetail() {
   const reviewerName = game.reviewer?.displayName ?? null;
   const title = game.title;
   const subtitle = `${game.timeControl} · Submitted by ${authorName}`;
+  const isAuthor = viewerId && (game.authorId === viewerId || game.author?.id === viewerId);
+  const canClaimFromDetail = game.status === "pending" && !isAuthor;
 
   return (
     <main className="review-container">
@@ -116,13 +136,30 @@ export default function GameDetail() {
         <div>
           <h2 className="review-title">{title}</h2>
           <span className="review-subtitle">{subtitle}</span>
+          {claimError ? (
+            <p style={{ marginTop: 8, color: "var(--color-danger-soft-text, #b42318)", fontSize: 13 }}>
+              {claimError}
+            </p>
+          ) : null}
         </div>
-        {reviewerName && (
-          <div className="reviewer-badge">
-            <span className="reviewer-dot" />
-            Reviewed by {reviewerName}
-          </div>
-        )}
+        <div className="review-header-actions">
+          {canClaimFromDetail ? (
+            <button
+              type="button"
+              className="complete-review-btn"
+              onClick={() => claimMutation.mutate(game.id)}
+              disabled={claimMutation.isPending}
+            >
+              {claimMutation.isPending ? "Claiming…" : "Review Game"}
+            </button>
+          ) : null}
+          {reviewerName && (
+            <div className="reviewer-badge">
+              <span className="reviewer-dot" />
+              Reviewed by {reviewerName}
+            </div>
+          )}
+        </div>
       </div>
 
       {game.reviewNotes && (
