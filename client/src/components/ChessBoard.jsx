@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { Chess } from "chess.js";
 
 const PIECE_THEME =
@@ -26,6 +26,14 @@ const SkipForward = () => (
     <line x1="19" y1="4" x2="19" y2="20" />
   </svg>
 );
+const FlipBoard = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="17 1 21 5 17 9" />
+    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+    <polyline points="7 23 3 19 7 15" />
+    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+  </svg>
+);
 
 export default function ChessBoard({
   fen,
@@ -38,6 +46,7 @@ export default function ChessBoard({
   moveLabel,
   readOnly = false,
 }) {
+  const [isFlipped, setIsFlipped] = useState(false);
   const boardElRef = useRef(null);
   const boardRef = useRef(null);
   const propsRef = useRef(null);
@@ -116,6 +125,7 @@ export default function ChessBoard({
       const board = window.Chessboard(boardElRef.current, {
         draggable: !propsRef.current.readOnly,
         position: propsRef.current.fen,
+        orientation: isFlipped ? "black" : "white",
         pieceTheme: PIECE_THEME,
 
         onDragStart: (source, piece) => {
@@ -190,7 +200,7 @@ export default function ChessBoard({
         boardRef.current = null;
       }
     };
-  }, [clearHighlights, highlightCurrentMove, highlightSquare]);
+  }, [clearHighlights, highlightCurrentMove, highlightSquare, isFlipped]);
 
   useEffect(() => {
     selectedSquareRef.current = null;
@@ -200,6 +210,11 @@ export default function ChessBoard({
       highlightCurrentMove(currentNode);
     }
   }, [fen, currentNode, clearHighlights, highlightCurrentMove]);
+
+  useEffect(() => {
+    if (!boardRef.current) return;
+    boardRef.current.orientation(isFlipped ? "black" : "white");
+  }, [isFlipped]);
 
   return (
     <div className="board-card">
@@ -225,6 +240,15 @@ export default function ChessBoard({
         </button>
         <button type="button" className="ctrl-btn" title="Last move" aria-label="Last move" onClick={onLast}>
           <SkipForward />
+        </button>
+        <button
+          type="button"
+          className="ctrl-btn"
+          title="Flip board"
+          aria-label="Flip board"
+          onClick={() => setIsFlipped((v) => !v)}
+        >
+          <FlipBoard />
         </button>
       </div>
     </div>
