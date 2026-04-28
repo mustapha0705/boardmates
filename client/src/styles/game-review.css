@@ -66,8 +66,8 @@
 }
 .comment:hover { background: var(--color-background-secondary); }
 .comment.active {
-  border-left: 3px solid #1a1a2e;
-  background: #1a1a2e08;
+  border-left: 3px solid var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 12%, transparent);
   padding-left: 11px;
 }
 .comment-meta {
@@ -85,7 +85,7 @@
   color: var(--color-text-secondary);
   line-height: 1.55;
 }
-.tag { font-size: 12px; font-weight: 500; color: #1a1a2e; }
+.tag { font-size: 12px; font-weight: 500; color: var(--color-brand); }
 .tag.muted { color: var(--color-text-tertiary); }
 
 /* Search */
@@ -140,8 +140,8 @@
 
 .comment-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .btn-primary {
-  background: #1a1a2e;
-  color: #f0ede4;
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
@@ -150,7 +150,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-primary:hover { background: #2d2d4a; }
+.btn-primary:hover { opacity: 0.92; }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-secondary {
   background: var(--color-background-primary);
@@ -211,8 +211,8 @@
 
 /* BOARD */
 .board-card {
-  background: white;
-  border: 1px solid #e5e5e5;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
   border-radius: 12px;
   padding: 10px;
 
@@ -272,7 +272,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #1a1a2e;
+  background: var(--color-brand);
   flex-shrink: 0;
 }
 /* Click-to-move highlight */
@@ -290,8 +290,8 @@
 
 /* CARDS */
 .card {
-  background: white;
-  border: 1px solid #e5e5e5;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
   border-radius: 12px;
   padding: 15px;
 }
@@ -343,8 +343,8 @@
 }
 
 .move-tree .move-cell.active-move {
-  background: #1a1a2e;
-  color: #f0ede4;
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
   font-weight: 500;
 }
 
@@ -388,8 +388,8 @@
 
 /* Review notes from submitter */
 .review-notes-card {
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
+  background: var(--color-warning-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--color-warning-soft-text) 30%, transparent);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -401,21 +401,21 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #92400e;
+  color: var(--color-warning-soft-text);
   margin-bottom: 6px;
 }
 
 .review-notes-text {
   font-size: 13.5px;
-  color: #78350f;
+  color: var(--color-warning-soft-text);
   line-height: 1.55;
   margin: 0;
 }
 
 /* Rating badge */
 .rating-badge {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-soft-bg);
+  color: var(--color-warning-soft-text);
   font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
@@ -437,8 +437,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #065f46;
-  color: #d1fae5;
+  background: var(--color-success-soft-bg);
+  color: var(--color-success-soft-text);
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -450,7 +450,7 @@
   transition: background 0.15s;
 }
 .complete-review-btn:hover {
-  background: #047857;
+  opacity: 0.92;
 }
 
 /* Confirmation inline */
@@ -465,8 +465,8 @@
   white-space: nowrap;
 }
 .confirm-yes-btn {
-  background: #065f46;
-  color: #d1fae5;
+  background: var(--color-success-soft-bg);
+  color: var(--color-success-soft-text);
   border: none;
   padding: 7px 14px;
   border-radius: 8px;
@@ -477,7 +477,7 @@
   white-space: nowrap;
   transition: background 0.15s;
 }
-.confirm-yes-btn:hover { background: #047857; }
+.confirm-yes-btn:hover { opacity: 0.92; }
 .confirm-no-btn {
   background: var(--color-background-primary);
   border: 0.5px solid var(--color-border-tertiary);

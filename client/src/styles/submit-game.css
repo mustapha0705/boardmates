@@ -59,9 +59,9 @@
 }
 
 .tab.active {
-  color: #1a1a2e;
-  border-bottom: 2px solid #1a1a2e;
-  background: #1a1a2e06;
+  color: var(--color-brand);
+  border-bottom: 2px solid var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 10%, transparent);
 }
 
 /* Upload area */
@@ -78,7 +78,7 @@
 }
 
 .upload-box:hover {
-  border-color: #1a1a2e;
+  border-color: var(--color-brand);
 }
 
 .upload-icon {
@@ -202,8 +202,8 @@ textarea {
 /* Buttons */
 .primary-btn {
   width: 100%;
-  background: #1a1a2e;
-  color: #f0ede4;
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
   padding: 13px;
   border: none;
   border-radius: 10px;
@@ -219,7 +219,7 @@ textarea {
   margin-top: 16px;
 }
 
-.primary-btn:hover { background: #2d2d4a; }
+.primary-btn:hover { opacity: 0.92; }
 .primary-btn:active { transform: scale(0.98); }
 
 .secondary-btn {
@@ -248,18 +248,18 @@ textarea {
 
 
 .submit-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-danger-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--color-danger-soft-text) 25%, transparent);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  color: #991b1b;
+  color: var(--color-danger-soft-text);
   margin-bottom: 16px;
 }
 
 .file-name {
   word-break: break-all;
-  color: #065f46;
+  color: var(--color-success-soft-text);
 }
 
 @media (max-width: 768px) {

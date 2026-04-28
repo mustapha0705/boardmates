@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { useAuth } from "./context/useAuth";
 import { Analytics } from "@vercel/analytics/react";
 import Layout from "./components/Layout.jsx";
@@ -44,8 +45,9 @@ function RedirectIfAuth({ children }) {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Analytics />
+      <ThemeProvider>
+        <AuthProvider>
+          <Analytics />
           <Routes>
             <Route
               path="/"
@@ -79,7 +81,8 @@ function App() {
             />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

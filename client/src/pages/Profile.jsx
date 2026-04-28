@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/useAuth";
+import { useTheme } from "../context/ThemeContext";
 import { fetchProfileStats, fetchProfileGames, fetchProfileReviews } from "../services/api";
 import { timeAgo } from "../utils/time";
 import { chessPlatformLabel } from "../utils/chessPlatform";
@@ -18,6 +19,7 @@ function getInitial(name) {
 
 export default function Profile() {
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const { data: stats } = useQuery({
     queryKey: ["profile", "stats"],
@@ -82,6 +84,9 @@ export default function Profile() {
                     Member since {memberSince}
                   </p>
                 </div>
+                <button type="button" className="theme-toggle-btn" onClick={toggleTheme}>
+                  {isDark ? "Switch to Light" : "Switch to Dark"}
+                </button>
               </div>
 
               <div className="profile-stats">

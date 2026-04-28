@@ -26,7 +26,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #1a1a2e;
+  background: var(--color-brand);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,8 +36,24 @@
   font-family: "DM Serif Display", serif;
   font-size: 32px;
   font-weight: 400;
-  color: #f0ede4;
+  color: var(--color-brand-contrast);
   line-height: 1;
+}
+
+.theme-toggle-btn {
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--color-border-primary);
 }
 
 .profile-info {
@@ -159,7 +175,7 @@
 .empty-cta {
   font-size: 13px;
   font-weight: 500;
-  color: #1a1a2e;
+  color: var(--color-brand);
   text-decoration: none;
 }
 .empty-cta:hover {
@@ -223,16 +239,16 @@
   line-height: 1.6;
 }
 .profile-badge-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-soft-bg);
+  color: var(--color-warning-soft-text);
 }
 .profile-badge-in-review {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--color-info-soft-bg);
+  color: var(--color-info-soft-text);
 }
 .profile-badge-completed {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-soft-bg);
+  color: var(--color-success-soft-text);
 }
 
 .profile-game-date {
@@ -257,7 +273,7 @@
   border-color: var(--color-border-secondary);
 }
 .profile-review-card.in-progress {
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid var(--color-brand);
 }
 
 .profile-review-top {

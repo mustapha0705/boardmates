@@ -20,9 +20,9 @@
 
 .feed-claim-error {
   font-size: 13px;
-  color: #b42318;
-  background: #fef3f2;
-  border: 1px solid #fecdca;
+  color: var(--color-danger-soft-text);
+  background: var(--color-danger-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--color-danger-soft-text) 25%, transparent);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
@@ -60,7 +60,7 @@
 .card-icon {
   width: 40px;
   height: 40px;
-  background: #1a1a2e08;
+  background: color-mix(in srgb, var(--color-brand) 14%, transparent);
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -123,22 +123,22 @@
   line-height: 1.6;
 }
 .badge-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-soft-bg);
+  color: var(--color-warning-soft-text);
 }
 .badge-in-review {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--color-info-soft-bg);
+  color: var(--color-info-soft-text);
 }
 .badge-completed {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-soft-bg);
+  color: var(--color-success-soft-text);
 }
 
 /* ── CTA buttons ── */
 .review-btn {
-  background: #1a1a2e;
-  color: #f0ede4;
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
   border: none;
   padding: 8px 14px;
   border-radius: 8px;
@@ -155,7 +155,7 @@
   white-space: nowrap;
 }
 .review-btn:hover {
-  background: #2d2d4a;
+  opacity: 0.92;
 }
 .review-btn.btn-locked {
   background: var(--color-background-secondary);
@@ -167,11 +167,11 @@
   color: var(--color-text-secondary);
 }
 .review-btn.btn-view {
-  background: #065f46;
-  color: #d1fae5;
+  background: var(--color-success-soft-bg);
+  color: var(--color-success-soft-text);
 }
 .review-btn.btn-view:hover {
-  background: #047857;
+  opacity: 0.92;
 }
 
 /* ── Empty state ── */
@@ -195,8 +195,8 @@
 }
 .feed-empty-cta {
   margin-top: 8px;
-  background: #1a1a2e;
-  color: #f0ede4;
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 13px;
@@ -205,7 +205,7 @@
   text-decoration: none;
   transition: background 0.15s;
 }
-.feed-empty-cta:hover { background: #2d2d4a; }
+.feed-empty-cta:hover { opacity: 0.92; }
 
 /* ── Infinite scroll sentinel ── */
 .scroll-sentinel {
