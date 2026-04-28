@@ -5,9 +5,9 @@ const THEME_KEY = "boardmates-theme";
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") return "light";
+    if (typeof window === "undefined") return "dark";
     const saved = window.localStorage.getItem(THEME_KEY);
-    return saved === "dark" ? "dark" : "light";
+    return saved === "light" ? "light" : "dark";
   });
 
   useEffect(() => {
