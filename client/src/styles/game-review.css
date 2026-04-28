@@ -299,6 +299,7 @@
 .card-header {
   font-weight: 600;
   margin-bottom: 10px;
+  color: var(--color-text-primary);
 }
 
 /* MOVE TREE */
@@ -388,8 +389,8 @@
 
 /* Review notes from submitter */
 .review-notes-card {
-  background: var(--color-warning-soft-bg);
-  border: 1px solid color-mix(in srgb, var(--color-warning-soft-text) 30%, transparent);
+  background: var(--color-success-soft-bg);
+  border: 1px solid color-mix(in srgb, var(--color-success-soft-text) 30%, transparent);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -401,13 +402,13 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-warning-soft-text);
+  color: var(--color-success-soft-text);
   margin-bottom: 6px;
 }
 
 .review-notes-text {
   font-size: 13.5px;
-  color: var(--color-warning-soft-text);
+  color: var(--color-success-soft-text);
   line-height: 1.55;
   margin: 0;
 }
