@@ -270,6 +270,7 @@
 @media (max-width: 768px) {
   .mobile-only { display: initial; }
   .desktop-only { display: none; }
+  .topbar-right { visibility: hidden; }
 }
 
 @media (min-width: 769px) {
