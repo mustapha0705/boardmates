@@ -9,6 +9,9 @@ function formatSignupError(err) {
   if (m.includes("rate limit")) {
     return "email rate limit exceeded";
   }
+  if (m === "validation failed") {
+    return "We couldn't find that username on the selected platform. Please check and try again.";
+  }
   return raw || "Signup failed";
 }
 

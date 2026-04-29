@@ -46,7 +46,11 @@ export default function Profile() {
   const inProgress = inProgressData?.games ?? [];
 
   const displayName = user?.displayName ?? "Player";
-  const platformLine = chessPlatformLabel(user?.chessPlatform);
+  const platformLabel = chessPlatformLabel(user?.chessPlatform);
+  const rapidRatingText =
+    Number.isFinite(user?.rapidRating) && user.rapidRating > 0 ? `Rapid ${user.rapidRating}` : null;
+  const platformLine =
+    platformLabel && rapidRatingText ? `${platformLabel} · ${rapidRatingText}` : platformLabel || null;
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "—";

@@ -40,16 +40,48 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const hydrateProfileFromAuthMetadata = useCallback(async (sessionValue, existingProfile) => {
+    const accessToken = sessionValue?.access_token;
+    const meta = sessionValue?.user?.user_metadata || {};
+    const chessUsername = String(meta.chessUsername || "").trim().toLowerCase();
+    const chessPlatform = String(meta.chessPlatform || "").trim();
+    const profileNeedsHydration = !existingProfile || !existingProfile.chessUsername || !existingProfile.chessPlatform;
+
+    if (!accessToken || !profileNeedsHydration || !chessUsername || !chessPlatform) {
+      return existingProfile || null;
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        chessUsername,
+        chessPlatform,
+      }),
+    }).catch(() => null);
+
+    if (res?.ok) {
+      const profileData = await res.json();
+      if (mountedRef.current) setProfile(profileData);
+      return profileData;
+    }
+
+    return existingProfile || null;
+  }, []);
+
   useEffect(() => {
     mountedRef.current = true;
 
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (!mountedRef.current) return;
       setSession(s);
       if (s?.access_token) {
-        fetchProfile(s.access_token).finally(() => {
-          if (mountedRef.current) setLoading(false);
-        });
+        const existing = await fetchProfile(s.access_token);
+        await hydrateProfileFromAuthMetadata(s, existing);
+        if (mountedRef.current) setLoading(false);
       } else {
         setLoading(false);
       }
@@ -63,24 +95,7 @@ export function AuthProvider({ children }) {
       if (event === "INITIAL_SESSION") return;
       if (s?.access_token) {
         const existing = await fetchProfile(s.access_token);
-        if (!existing && s.user?.user_metadata?.chessUsername && s.user?.user_metadata?.chessPlatform) {
-          const meta = s.user.user_metadata;
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/signup`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${s.access_token}`,
-            },
-            body: JSON.stringify({
-              chessUsername: meta.chessUsername,
-              chessPlatform: meta.chessPlatform,
-            }),
-          }).catch(() => null);
-          if (res?.ok) {
-            const p = await res.json();
-            if (mountedRef.current) setProfile(p);
-          }
-        }
+        await hydrateProfileFromAuthMetadata(s, existing);
       } else {
         setProfile(null);
       }
@@ -90,10 +105,27 @@ export function AuthProvider({ children }) {
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, hydrateProfileFromAuthMetadata]);
 
   const signUp = useCallback(async ({ email, password, chessPlatform, chessUsername }) => {
-    const handle = String(chessUsername || "").trim();
+    const handle = String(chessUsername || "").trim().toLowerCase();
+
+    const preflightRes = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate-chess-username`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chessUsername: handle,
+        chessPlatform,
+      }),
+    });
+
+    if (!preflightRes.ok) {
+      const body = await preflightRes.json().catch(() => ({}));
+      throw new Error(body.errors?.[0]?.message || body.message || "Failed to validate chess username");
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -131,7 +163,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || "Failed to create profile");
+        throw new Error(body.errors?.[0]?.message || body.message || "Failed to create profile");
       }
 
       const profileData = await res.json();
