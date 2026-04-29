@@ -137,3 +137,12 @@ export function fetchProfileReviews({ cursor, limit, status } = {}) {
   const qs = params.toString();
   return request(`/profile/reviews${qs ? `?${qs}` : ""}`);
 }
+
+// ── Auth ──
+
+export function validateChessUsername({ chessUsername, chessPlatform }) {
+  return request("/auth/validate-chess-username", {
+    method: "POST",
+    body: JSON.stringify({ chessUsername, chessPlatform }),
+  });
+}

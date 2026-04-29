@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { validateChessUsername } from "../services/api";
 import "../styles/auth.css";
 
 function formatSignupError(err) {
@@ -23,11 +24,44 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [usernameCheck, setUsernameCheck] = useState({ status: "idle", message: "" });
   /** null | "verify_email" | "repeat" */
   const [afterSignup, setAfterSignup] = useState(null);
+  const latestUsernameCheckRef = useRef(0);
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  function clearUsernameCheck() {
+    setUsernameCheck({ status: "idle", message: "" });
+  }
+
+  async function handleUsernameBlur() {
+    const handle = chessUsername.trim().toLowerCase();
+    if (!chessPlatform || handle.length < 2) {
+      clearUsernameCheck();
+      return;
+    }
+
+    const checkId = ++latestUsernameCheckRef.current;
+    setUsernameCheck({ status: "checking", message: "Checking username..." });
+
+    try {
+      await validateChessUsername({
+        chessUsername: handle,
+        chessPlatform,
+      });
+      if (checkId !== latestUsernameCheckRef.current) return;
+      setUsernameCheck({ status: "valid", message: "Valid account found on selected platform." });
+    } catch (err) {
+      if (checkId !== latestUsernameCheckRef.current) return;
+      const message =
+        err?.body?.errors?.[0]?.message ||
+        err?.message ||
+        "We couldn't verify that username right now.";
+      setUsernameCheck({ status: "invalid", message });
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -184,7 +218,10 @@ export default function Signup() {
               <select
                 id="chess-platform"
                 value={chessPlatform}
-                onChange={(e) => setChessPlatform(e.target.value)}
+                onChange={(e) => {
+                  setChessPlatform(e.target.value);
+                  clearUsernameCheck();
+                }}
                 disabled={submitting}
                 className="auth-select"
               >
@@ -200,10 +237,27 @@ export default function Signup() {
                 placeholder="e.g. your_handle"
                 required
                 value={chessUsername}
-                onChange={(e) => setChessUsername(e.target.value)}
+                onChange={(e) => {
+                  setChessUsername(e.target.value);
+                  clearUsernameCheck();
+                }}
+                onBlur={handleUsernameBlur}
                 disabled={submitting}
                 autoComplete="username"
               />
+              {usernameCheck.status !== "idle" ? (
+                <p
+                  className={
+                    usernameCheck.status === "valid"
+                      ? "auth-field-msg auth-field-msg-success"
+                      : usernameCheck.status === "invalid"
+                        ? "auth-field-msg auth-field-msg-error"
+                        : "auth-field-msg"
+                  }
+                >
+                  {usernameCheck.message}
+                </p>
+              ) : null}
             </div>
 
             <button className="primary-btn" type="submit" disabled={submitting}>
