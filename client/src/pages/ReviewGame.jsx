@@ -11,6 +11,7 @@ import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 import { serializeAnalysisTreeNode } from "../utils/analysisTree";
+import { playMoveSoundForNode } from "../utils/moveSound";
 
 function ReviewGameInner({
   game,
@@ -91,6 +92,42 @@ function ReviewGameInner({
   const isInReview = game?.status === "in_review";
   const isMyReview = game?.reviewer?.id === viewerId;
 
+  const handleSelectNode = useCallback((node) => {
+    if (!node || node.id === tree.currentNode?.id) return;
+    tree.goToNode(node);
+    playMoveSoundForNode(node);
+  }, [tree]);
+
+  const handleFirst = useCallback(() => {
+    const target = tree.root;
+    if (!target || target.id === tree.currentNode?.id) return;
+    tree.goToFirst();
+    playMoveSoundForNode(target);
+  }, [tree]);
+
+  const handlePrev = useCallback(() => {
+    const target = tree.currentNode?.parent;
+    if (!target) return;
+    tree.goToPrev();
+    playMoveSoundForNode(target);
+  }, [tree]);
+
+  const handleNext = useCallback(() => {
+    const target = tree.currentNode?.children?.[0];
+    if (!target) return;
+    tree.goToNext();
+    playMoveSoundForNode(target);
+  }, [tree]);
+
+  const handleLast = useCallback(() => {
+    let target = tree.currentNode;
+    if (!target) return;
+    while (target.children.length > 0) target = target.children[0];
+    if (target.id === tree.currentNode?.id) return;
+    tree.goToLast();
+    playMoveSoundForNode(target);
+  }, [tree]);
+
   if (!tree.root) {
     return (
       <main className="review-container">
@@ -169,16 +206,16 @@ function ReviewGameInner({
             fen={tree.currentNode.fen}
             currentNode={tree.currentNode}
             onMove={tree.makeMove}
-            onFirst={tree.goToFirst}
-            onPrev={tree.goToPrev}
-            onNext={tree.goToNext}
-            onLast={tree.goToLast}
+            onFirst={handleFirst}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onLast={handleLast}
             moveLabel={getMoveLabel(tree.currentNode)}
           />
           <MoveList
             root={tree.root}
             currentNode={tree.currentNode}
-            onSelectNode={tree.goToNode}
+            onSelectNode={handleSelectNode}
           />
           <CommentForm
             currentNode={tree.currentNode}
@@ -190,7 +227,7 @@ function ReviewGameInner({
           <CommentList
             root={tree.root}
             currentNode={tree.currentNode}
-            onSelectNode={tree.goToNode}
+            onSelectNode={handleSelectNode}
           />
         </div>
       </div>

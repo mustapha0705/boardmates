@@ -256,6 +256,11 @@
   transform: scale(0.95);
 }
 
+.ctrl-btn-muted {
+  color: var(--color-text-tertiary);
+  opacity: 0.8;
+}
+
 .move-indicator {
   display: flex;
   align-items: center;

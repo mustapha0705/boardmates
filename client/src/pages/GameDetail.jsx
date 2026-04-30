@@ -11,6 +11,7 @@ import { useAuth } from "../context/useAuth";
 import "../styles/game-review.css";
 import { Chess } from "chess.js";
 import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
+import { playMoveSoundForNode } from "../utils/moveSound";
 
 let detailNodeId = 10000;
 
@@ -92,17 +93,40 @@ export default function GameDetail() {
     },
   });
 
-  const goToFirst = useCallback(() => setCurrentNode(root), [root]);
-  const goToPrev = useCallback(() => setCurrentNode((n) => (n ?? root)?.parent || n || root), [root]);
-  const goToNext = useCallback(() => setCurrentNode((n) => (n ?? root)?.children[0] || n || root), [root]);
+  const goToFirst = useCallback(() => {
+    if (!root || activeNode?.id === root.id) return;
+    setCurrentNode(root);
+    playMoveSoundForNode(root);
+  }, [root, activeNode]);
+
+  const goToPrev = useCallback(() => {
+    const target = (activeNode ?? root)?.parent;
+    if (!target) return;
+    setCurrentNode(target);
+    playMoveSoundForNode(target);
+  }, [activeNode, root]);
+
+  const goToNext = useCallback(() => {
+    const target = (activeNode ?? root)?.children?.[0];
+    if (!target) return;
+    setCurrentNode(target);
+    playMoveSoundForNode(target);
+  }, [activeNode, root]);
+
   const goToLast = useCallback(() => {
-    setCurrentNode(() => {
-      let cur = root;
-      if (!cur) return null;
-      while (cur.children.length > 0) cur = cur.children[0];
-      return cur;
-    });
-  }, [root]);
+    let cur = activeNode ?? root;
+    if (!cur) return;
+    while (cur.children.length > 0) cur = cur.children[0];
+    if (cur.id === activeNode?.id) return;
+    setCurrentNode(cur);
+    playMoveSoundForNode(cur);
+  }, [activeNode, root]);
+
+  const handleSelectNode = useCallback((node) => {
+    if (!node || node.id === activeNode?.id) return;
+    setCurrentNode(node);
+    playMoveSoundForNode(node);
+  }, [activeNode]);
 
   useKeyboardNav({ onFirst: goToFirst, onPrev: goToPrev, onNext: goToNext, onLast: goToLast });
 
@@ -190,14 +214,14 @@ export default function GameDetail() {
           <MoveList
             root={root}
             currentNode={activeNode}
-            onSelectNode={setCurrentNode}
+            onSelectNode={handleSelectNode}
           />
         </div>
         <div className="right-column">
           <CommentList
             root={root}
             currentNode={activeNode}
-            onSelectNode={setCurrentNode}
+            onSelectNode={handleSelectNode}
           />
         </div>
       </div>

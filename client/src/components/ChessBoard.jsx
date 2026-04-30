@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { Chess } from "chess.js";
+import { getMoveSoundsEnabled, setMoveSoundsEnabled } from "../utils/moveSound";
 
 const PIECE_THEME =
   "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png";
@@ -34,6 +35,20 @@ const FlipBoard = () => (
     <path d="M21 13v2a4 4 0 0 1-4 4H3" />
   </svg>
 );
+const SoundOn = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+  </svg>
+);
+const SoundOff = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </svg>
+);
 
 export default function ChessBoard({
   fen,
@@ -47,6 +62,7 @@ export default function ChessBoard({
   readOnly = false,
 }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [soundsEnabled, setSoundsEnabled] = useState(getMoveSoundsEnabled);
   const boardElRef = useRef(null);
   const boardRef = useRef(null);
   const propsRef = useRef(null);
@@ -216,6 +232,15 @@ export default function ChessBoard({
     boardRef.current.orientation(isFlipped ? "black" : "white");
   }, [isFlipped]);
 
+  useEffect(() => {
+    function handleStorage(e) {
+      if (e.key !== "boardmates.moveSoundEnabled") return;
+      setSoundsEnabled(getMoveSoundsEnabled());
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   return (
     <div className="board-card">
       <div className="board-wrapper">
@@ -249,6 +274,19 @@ export default function ChessBoard({
           onClick={() => setIsFlipped((v) => !v)}
         >
           <FlipBoard />
+        </button>
+        <button
+          type="button"
+          className={`ctrl-btn ${soundsEnabled ? "" : "ctrl-btn-muted"}`.trim()}
+          title={soundsEnabled ? "Mute move sounds" : "Unmute move sounds"}
+          aria-label={soundsEnabled ? "Mute move sounds" : "Unmute move sounds"}
+          onClick={() => {
+            const next = !soundsEnabled;
+            setSoundsEnabled(next);
+            setMoveSoundsEnabled(next);
+          }}
+        >
+          {soundsEnabled ? <SoundOn /> : <SoundOff />}
         </button>
       </div>
     </div>
