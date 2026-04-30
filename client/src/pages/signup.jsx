@@ -274,17 +274,17 @@ export default function Signup() {
           </form>
 
           <p className="terms">
-            By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            By signing up, you agree to our <a>Terms of Service</a> and <a>Privacy Policy</a>.
           </p>
           </>
           )}
 
           <footer className="signup-footer">
-            <span>&copy; 2024 Boardmates</span>
+            <span>&copy; 2026 Boardmates</span>
             <div className="footer-links">
-              <a href="#">Help Center</a>
-              <a href="#">Community Rules</a>
-              <a href="#">Security</a>
+              <a href="mailto:chess.boardmates@gmail.com?subject=Support Request">Help Center</a>
+              <a>Community Rules</a>
+              <a>Security</a>
             </div>
           </footer>
         </div>

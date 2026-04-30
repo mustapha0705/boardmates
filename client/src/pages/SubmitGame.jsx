@@ -6,8 +6,8 @@ import "../styles/submit-game.css";
 
 const TIME_CONTROL_LABELS = {
   bullet: "1+0",
-  blitz: "5+3",
-  rapid: "10+5",
+  blitz: "3+2",
+  rapid: "15+10",
   classical: "30m",
   daily: "1d",
 };
@@ -342,8 +342,7 @@ export default function SubmitGame() {
               {mutation.isPending ? "Submitting..." : "Submit for Review"}
             </button>
             <p className="disclaimer">
-              By submitting, you agree to our community guidelines and analysis
-              terms.
+              By submitting, you agree to our community guidelines.
             </p>
           </div>
         </main>

@@ -134,9 +134,9 @@ export default function Login() {
         </div>
 
         <div className="bottom-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Contact Support</a>
+          <a>Privacy Policy</a>
+          <a>Terms of Service</a>
+          <a href="mailto:chess.boardmates@gmail.com?subject=Support Request">Contact Support</a>
         </div>
       </div>
     </div>
