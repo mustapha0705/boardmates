@@ -17,6 +17,7 @@ export default function Feed() {
   const sentinelRef = useRef(null);
   const [claimingId, setClaimingId] = useState(null);
   const [claimError, setClaimError] = useState(null);
+  const [confirmingId, setConfirmingId] = useState(null);
 
   const {
     data,
@@ -49,7 +50,10 @@ export default function Feed() {
   });
 
   const handleStartReview = useCallback(
-    (id) => claimMutation.mutate(id),
+    (id) => {
+      setConfirmingId(null);
+      claimMutation.mutate(id);
+    },
     [claimMutation],
   );
 
@@ -116,6 +120,9 @@ export default function Feed() {
               currentUserId={viewerId}
               authLoading={authLoading}
               onStartReview={handleStartReview}
+              onOpenConfirm={(gameId) => setConfirmingId(gameId)}
+              onCancelConfirm={() => setConfirmingId(null)}
+              confirmOpen={confirmingId === game.id}
               claiming={claimingId === game.id}
             />
           ))}

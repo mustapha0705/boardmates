@@ -7,7 +7,16 @@ function getInitial(name) {
   return String(name).trim().charAt(0).toUpperCase() || "?";
 }
 
-export default function GameCard({ game, currentUserId, authLoading, onStartReview, claiming }) {
+export default function GameCard({
+  game,
+  currentUserId,
+  authLoading,
+  onStartReview,
+  onOpenConfirm,
+  onCancelConfirm,
+  confirmOpen,
+  claiming,
+}) {
   const { id, authorId, title, submittedAt, timeControl, status, reviewer, author } = game;
   const badge = STATUS_CONFIG[status];
 
@@ -36,16 +45,7 @@ export default function GameCard({ game, currentUserId, authLoading, onStartRevi
       </button>
     );
   } else if (status === "pending" && !isAuthor) {
-    cta = (
-      <button
-        type="button"
-        className="review-btn"
-        onClick={() => onStartReview(id)}
-        disabled={claiming}
-      >
-        {claiming ? "Claiming…" : "Review Game →"}
-      </button>
-    );
+    cta = null;
   } else if (status === "pending" && isAuthor) {
     cta = (
       <Link to={`/game-detail/${id}`} className="review-btn btn-view">
@@ -109,7 +109,49 @@ export default function GameCard({ game, currentUserId, authLoading, onStartRevi
         </div>
       </div>
 
-      {cta}
+      {status === "pending" && !isAuthor ? (
+        confirmOpen ? (
+          <div className="review-confirm-inline">
+            <span className="review-confirm-text">Start review?</span>
+            <button
+              type="button"
+              className="review-confirm-btn review-confirm-yes"
+              onClick={() => onStartReview(id)}
+              disabled={claiming}
+              aria-label="Confirm review game"
+              title="Confirm"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="review-confirm-btn review-confirm-no"
+              onClick={onCancelConfirm}
+              disabled={claiming}
+              aria-label="Cancel review game"
+              title="Cancel"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="review-btn"
+            onClick={() => onOpenConfirm(id)}
+            disabled={claiming}
+          >
+            {claiming ? "Claiming…" : "Review Game →"}
+          </button>
+        )
+      ) : (
+        cta
+      )}
     </div>
   );
 }

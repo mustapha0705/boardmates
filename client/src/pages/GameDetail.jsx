@@ -78,12 +78,14 @@ export default function GameDetail() {
 
   const [currentNode, setCurrentNode] = useState(null);
   const [claimError, setClaimError] = useState("");
+  const [showClaimConfirm, setShowClaimConfirm] = useState(false);
   const activeNode = currentNode ?? root;
 
   const claimMutation = useMutation({
     mutationFn: claimReview,
     onSuccess: () => {
       setClaimError("");
+      setShowClaimConfirm(false);
       queryClient.invalidateQueries({ queryKey: ["games"] });
       queryClient.invalidateQueries({ queryKey: ["game", id] });
       navigate(`/review-game/${id}`, { replace: true });
@@ -168,14 +170,45 @@ export default function GameDetail() {
         </div>
         <div className="review-header-actions">
           {canClaimFromDetail ? (
-            <button
-              type="button"
-              className="complete-review-btn"
-              onClick={() => claimMutation.mutate(game.id)}
-              disabled={claimMutation.isPending}
-            >
-              {claimMutation.isPending ? "Claiming…" : "Review Game"}
-            </button>
+            showClaimConfirm ? (
+              <div className="claim-confirm-inline">
+                <span className="confirm-text">Start review?</span>
+                <button
+                  type="button"
+                  className="confirm-yes-btn"
+                  onClick={() => claimMutation.mutate(game.id)}
+                  disabled={claimMutation.isPending}
+                  aria-label="Confirm review game"
+                  title="Confirm"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="confirm-no-btn"
+                  onClick={() => setShowClaimConfirm(false)}
+                  disabled={claimMutation.isPending}
+                  aria-label="Cancel review game"
+                  title="Cancel"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="complete-review-btn"
+                onClick={() => setShowClaimConfirm(true)}
+                disabled={claimMutation.isPending}
+              >
+                {claimMutation.isPending ? "Claiming…" : "Review Game"}
+              </button>
+            )
           ) : null}
           {reviewerName && (
             <div className="reviewer-badge">

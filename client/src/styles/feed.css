@@ -183,6 +183,40 @@
   opacity: 0.92;
 }
 
+.review-confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.review-confirm-text {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.review-confirm-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.review-confirm-yes {
+  color: var(--color-success-soft-text);
+}
+
+.review-confirm-no {
+  color: var(--color-danger-soft-text);
+}
+
 /* ── Empty state ── */
 .feed-empty {
   display: flex;
@@ -226,6 +260,7 @@
   .feed { padding: 20px 16px; }
   .game-card { flex-direction: column; align-items: flex-start; gap: 12px; }
   .review-btn { width: 100%; justify-content: center; }
+  .review-confirm-inline { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {

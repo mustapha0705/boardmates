@@ -465,6 +465,12 @@
   align-items: center;
   gap: 8px;
 }
+
+.claim-confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .confirm-text {
   font-size: 13px;
   color: var(--color-text-secondary);
