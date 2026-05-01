@@ -532,9 +532,10 @@
   .review-title { font-size: 17px; }
   .review-subtitle { font-size: 11px; }
   .review-notes-card { padding: 10px 12px; margin-bottom: 14px; }
-  .ctrl-btn { width: 28px; height: 28px; }
+  .ctrl-btn { width: 42px; height: 42px; }
+  .ctrl-btn svg { width: 18px; height: 18px; }
   .move-indicator { font-size: 12px; min-width: 70px; padding: 0 8px; }
-  .board-controls { padding: 8px 8px 6px; gap: 3px; }
+  .board-controls { padding: 10px 8px 8px; gap: 6px; }
   .move-tree { max-height: 220px; }
   .comments-header { padding: 10px 12px; font-size: 13px; }
   .comments-body { padding: 8px 10px; }
