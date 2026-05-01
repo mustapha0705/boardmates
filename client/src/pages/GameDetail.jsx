@@ -54,8 +54,6 @@ function buildTreeFromPgn(pgn, comments = []) {
   return root;
 }
 
-const NOOP = () => null;
-
 export default function GameDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -77,6 +75,7 @@ export default function GameDetail() {
   }, [game]);
 
   const [currentNode, setCurrentNode] = useState(null);
+  const [sandboxFen, setSandboxFen] = useState(null);
   const [claimError, setClaimError] = useState("");
   const [showClaimConfirm, setShowClaimConfirm] = useState(false);
   const activeNode = currentNode ?? root;
@@ -95,40 +94,60 @@ export default function GameDetail() {
     },
   });
 
+  const syncToGameNode = useCallback((node, playSound = false) => {
+    if (!node) return;
+    setCurrentNode(node);
+    setSandboxFen(null);
+    if (playSound) playMoveSoundForNode(node);
+  }, []);
+
   const goToFirst = useCallback(() => {
     if (!root || activeNode?.id === root.id) return;
-    setCurrentNode(root);
-    playMoveSoundForNode(root);
-  }, [root, activeNode]);
+    syncToGameNode(root, true);
+  }, [root, activeNode, syncToGameNode]);
 
   const goToPrev = useCallback(() => {
     const target = (activeNode ?? root)?.parent;
     if (!target) return;
-    setCurrentNode(target);
-    playMoveSoundForNode(target);
-  }, [activeNode, root]);
+    syncToGameNode(target, true);
+  }, [activeNode, root, syncToGameNode]);
 
   const goToNext = useCallback(() => {
     const target = (activeNode ?? root)?.children?.[0];
     if (!target) return;
-    setCurrentNode(target);
-    playMoveSoundForNode(target);
-  }, [activeNode, root]);
+    syncToGameNode(target, true);
+  }, [activeNode, root, syncToGameNode]);
 
   const goToLast = useCallback(() => {
     let cur = activeNode ?? root;
     if (!cur) return;
     while (cur.children.length > 0) cur = cur.children[0];
     if (cur.id === activeNode?.id) return;
-    setCurrentNode(cur);
-    playMoveSoundForNode(cur);
-  }, [activeNode, root]);
+    syncToGameNode(cur, true);
+  }, [activeNode, root, syncToGameNode]);
 
   const handleSelectNode = useCallback((node) => {
     if (!node || node.id === activeNode?.id) return;
-    setCurrentNode(node);
-    playMoveSoundForNode(node);
-  }, [activeNode]);
+    syncToGameNode(node, true);
+  }, [activeNode, syncToGameNode]);
+
+  const handleBoardMove = useCallback((from, to, promotion = "q") => {
+    const startFen = sandboxFen || activeNode?.fen;
+    if (!startFen) return null;
+
+    const gameForBoard = new Chess(startFen);
+    let move;
+    try {
+      move = gameForBoard.move({ from, to, promotion });
+    } catch {
+      return null;
+    }
+    if (!move) return null;
+
+    setSandboxFen(gameForBoard.fen());
+    playMoveSoundForNode({ san: move.san });
+    return { fen: gameForBoard.fen() };
+  }, [sandboxFen, activeNode]);
 
   useKeyboardNav({ onFirst: goToFirst, onPrev: goToPrev, onNext: goToNext, onLast: goToLast });
 
@@ -234,15 +253,14 @@ export default function GameDetail() {
       <div className="review-grid">
         <div className="left-column">
           <ChessBoard
-            fen={activeNode.fen}
+            fen={sandboxFen || activeNode.fen}
             currentNode={activeNode}
-            onMove={NOOP}
+            onMove={handleBoardMove}
             onFirst={goToFirst}
             onPrev={goToPrev}
             onNext={goToNext}
             onLast={goToLast}
-            moveLabel={getMoveLabel(activeNode)}
-            readOnly
+            moveLabel={sandboxFen ? "Analysis board" : getMoveLabel(activeNode)}
           />
           <MoveList
             root={root}

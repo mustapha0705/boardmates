@@ -15,11 +15,13 @@ export function setMoveSoundsEnabled(enabled) {
   window.localStorage.setItem(MOVE_SOUND_ENABLED_KEY, enabled ? "true" : "false");
 }
 
-function classifyMove(node) {
-  const san = String(node?.san || "");
-  if (!san) return null;
-  if (san.includes("#")) return "checkmate";
-  if (san.includes("x")) return "capture";
+function classifySan(san) {
+  const s = String(san || "");
+  if (!s) return null;
+  // Standard SAN: captures use "x"; check uses "+"; mate uses "#"
+  if (s.includes("x")) return "capture";
+  if (s.includes("#")) return "checkmate";
+  if (s.includes("+")) return "check";
   return "move";
 }
 
@@ -34,17 +36,25 @@ function playAudio(audio) {
   }
 }
 
-export function playMoveSoundForNode(node) {
+export function playMoveSoundForSan(san) {
   if (!getMoveSoundsEnabled()) return;
-  const type = classifyMove(node);
+  const type = classifySan(san);
   if (!type) return;
-  if (type === "checkmate") {
-    playAudio(checkAudio);
-    return;
-  }
   if (type === "capture") {
     playAudio(captureAudio);
     return;
   }
+  if (type === "checkmate") {
+    playAudio(checkAudio);
+    return;
+  }
+  if (type === "check") {
+    playAudio(checkAudio);
+    return;
+  }
   playAudio(moveAudio);
+}
+
+export function playMoveSoundForNode(node) {
+  playMoveSoundForSan(node?.san);
 }

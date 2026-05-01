@@ -34,13 +34,6 @@ function ReviewGameInner({
   const draftInFlightIdRef = useRef(0);
   const draftAbortRef = useRef(null);
 
-  useKeyboardNav({
-    onFirst: tree.goToFirst,
-    onPrev: tree.goToPrev,
-    onNext: tree.goToNext,
-    onLast: tree.goToLast,
-  });
-
   useEffect(() => {
     if (structureVersion < 1) return;
     if (!game?.id || game.status !== "in_review") return;
@@ -128,6 +121,22 @@ function ReviewGameInner({
     playMoveSoundForNode(target);
   }, [tree]);
 
+  useKeyboardNav({
+    onFirst: handleFirst,
+    onPrev: handlePrev,
+    onNext: handleNext,
+    onLast: handleLast,
+  });
+
+  const handleMakeMove = useCallback(
+    (from, to, promotion = "q") => {
+      const result = tree.makeMove(from, to, promotion);
+      if (result?.san) playMoveSoundForNode(result);
+      return result;
+    },
+    [tree],
+  );
+
   if (!tree.root) {
     return (
       <main className="review-container">
@@ -205,7 +214,7 @@ function ReviewGameInner({
           <ChessBoard
             fen={tree.currentNode.fen}
             currentNode={tree.currentNode}
-            onMove={tree.makeMove}
+            onMove={handleMakeMove}
             onFirst={handleFirst}
             onPrev={handlePrev}
             onNext={handleNext}
