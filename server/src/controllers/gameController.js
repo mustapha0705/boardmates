@@ -4,6 +4,8 @@ import { detectOpeningFromPgn } from "../utils/openingDetection.js";
 const AUTHOR_SELECT = { id: true, displayName: true };
 const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 10;
+const PLAYER_COLORS = new Set(["white", "black"]);
+const GAME_RESULTS = new Set(["win", "lose", "draw"]);
 
 /** Prisma `Json` hit recursion limits on deep chess trees; we store a Text column of JSON. */
 function serializeAnalysisTreeForDb(value) {
@@ -42,6 +44,8 @@ function formatGame(game, { includePgn = false, includeComments = false, include
     status: game.status,
     timeControl: game.timeControl,
     averageRating: game.averageRating,
+    playerColor: game.playerColor ?? null,
+    gameResult: game.gameResult ?? null,
     reviewNotes: game.reviewNotes,
     submittedAt: game.createdAt,
     claimedAt: game.claimedAt,
@@ -149,11 +153,15 @@ export async function getGame(req, res) {
 
 export async function createGame(req, res) {
   try {
-    const { title, pgn, timeControl, averageRating, reviewNotes } = req.body;
+    const { title, pgn, timeControl, averageRating, reviewNotes, playerColor, gameResult } = req.body;
     const errors = [];
 
     if (!pgn?.trim()) errors.push({ field: "pgn", message: "PGN is required" });
     if (!timeControl?.trim()) errors.push({ field: "timeControl", message: "Time control is required" });
+    if (!playerColor || !PLAYER_COLORS.has(String(playerColor)))
+      errors.push({ field: "playerColor", message: "Choose White or Black" });
+    if (!gameResult || !GAME_RESULTS.has(String(gameResult)))
+      errors.push({ field: "gameResult", message: "Choose win, lose, or draw" });
 
     if (errors.length) {
       return res.status(400).json({ message: "Validation failed", errors });
@@ -172,6 +180,8 @@ export async function createGame(req, res) {
         timeControl: cleanTimeControl,
         averageRating: averageRating ? parseInt(averageRating, 10) : null,
         reviewNotes: reviewNotes?.trim() || null,
+        playerColor: String(playerColor),
+        gameResult: String(gameResult),
         authorId: req.user.id,
       },
       include: {
@@ -195,7 +205,7 @@ export async function updateGame(req, res) {
     if (game.authorId !== req.user.id) return res.status(403).json({ message: "Only the author can edit this game" });
     if (game.status !== "pending") return res.status(409).json({ message: "Can only edit a game while it is pending" });
 
-    const { title, reviewNotes, timeControl, averageRating } = req.body;
+    const { title, reviewNotes, timeControl, averageRating, playerColor, gameResult } = req.body;
     const updates = {};
 
     if (title !== undefined) {
@@ -205,6 +215,24 @@ export async function updateGame(req, res) {
     if (reviewNotes !== undefined) updates.reviewNotes = reviewNotes?.trim() || null;
     if (timeControl !== undefined) updates.timeControl = timeControl.trim();
     if (averageRating !== undefined) updates.averageRating = averageRating ? parseInt(averageRating, 10) : null;
+    if (playerColor !== undefined) {
+      if (!PLAYER_COLORS.has(String(playerColor))) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: [{ field: "playerColor", message: "Choose White or Black" }],
+        });
+      }
+      updates.playerColor = String(playerColor);
+    }
+    if (gameResult !== undefined) {
+      if (!GAME_RESULTS.has(String(gameResult))) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: [{ field: "gameResult", message: "Choose win, lose, or draw" }],
+        });
+      }
+      updates.gameResult = String(gameResult);
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ message: "No fields to update" });

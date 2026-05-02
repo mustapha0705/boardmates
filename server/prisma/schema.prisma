@@ -19,6 +19,17 @@ enum ChessPlatform {
   lichess
 }
 
+enum PlayerColor {
+  white
+  black
+}
+
+enum GameResult {
+  win
+  lose
+  draw
+}
+
 model User {
   id             String         @id @default(uuid()) @db.Uuid
   email          String         @unique
@@ -43,6 +54,10 @@ model Game {
   pgn           String
   status        GameStatus @default(pending)
   timeControl   String     @map("time_control")
+  /// Which side the submitter played
+  playerColor   PlayerColor? @map("player_color")
+  /// Submitter's result (win / lose / draw)
+  gameResult    GameResult?  @map("game_result")
   averageRating Int?       @map("average_rating")
   reviewNotes   String?    @map("review_notes")
   /// Minified JSON string of the full move tree (Text avoids Prisma Json deep-validation "recursion limit" on large trees)
