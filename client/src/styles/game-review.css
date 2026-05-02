@@ -11,6 +11,15 @@
   color: var(--color-text-tertiary);
 }
 
+.review-outcome-note {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
 /* Reviewer badge (used in GameDetail) */
 .reviewer-badge {
   display: flex;

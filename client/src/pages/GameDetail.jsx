@@ -12,6 +12,7 @@ import "../styles/game-review.css";
 import { Chess } from "chess.js";
 import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
 import { playMoveSoundForNode } from "../utils/moveSound";
+import { formatAuthorOutcomeLine } from "../utils/gameOutcome";
 
 let detailNodeId = 10000;
 
@@ -171,6 +172,7 @@ export default function GameDetail() {
   const reviewerName = game.reviewer?.displayName ?? null;
   const title = game.title;
   const subtitle = `${game.timeControl} · Submitted by ${authorName}`;
+  const outcomeLine = formatAuthorOutcomeLine(game);
   const isAuthor = viewerId && (game.authorId === viewerId || game.author?.id === viewerId);
   const canClaimFromDetail = game.status === "pending" && !isAuthor;
 
@@ -181,6 +183,7 @@ export default function GameDetail() {
         <div>
           <h2 className="review-title">{title}</h2>
           <span className="review-subtitle">{subtitle}</span>
+          {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
           {claimError ? (
             <p style={{ marginTop: 8, color: "var(--color-danger-soft-text, #b42318)", fontSize: 13 }}>
               {claimError}

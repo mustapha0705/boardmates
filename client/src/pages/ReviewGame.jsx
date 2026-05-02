@@ -12,6 +12,7 @@ import CommentForm from "../components/CommentForm.jsx";
 import "../styles/game-review.css";
 import { serializeAnalysisTreeNode } from "../utils/analysisTree";
 import { playMoveSoundForNode } from "../utils/moveSound";
+import { formatAuthorOutcomeLine } from "../utils/gameOutcome";
 
 function ReviewGameInner({
   game,
@@ -81,6 +82,7 @@ function ReviewGameInner({
   const title = game?.title || "Game Review";
   const authorName = game?.author?.displayName ?? "Unknown";
   const subtitle = game ? `${game.timeControl} · Submitted by ${authorName}` : "";
+  const outcomeLine = formatAuthorOutcomeLine(game);
 
   const isInReview = game?.status === "in_review";
   const isMyReview = game?.reviewer?.id === viewerId;
@@ -152,6 +154,7 @@ function ReviewGameInner({
         <div>
           <h2 className="review-title">{title}</h2>
           {subtitle && <span className="review-subtitle">{subtitle}</span>}
+          {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
         </div>
         <div className="review-header-actions">
           {game?.averageRating && (

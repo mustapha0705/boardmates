@@ -24,6 +24,8 @@ export default function SubmitGame() {
   const [timeControl, setTimeControl] = useState("blitz");
   const [customTitle, setCustomTitle] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [playerColor, setPlayerColor] = useState("white");
+  const [gameResult, setGameResult] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
@@ -82,6 +84,11 @@ export default function SubmitGame() {
       return;
     }
 
+    if (!gameResult) {
+      setError("Choose your result: win, loss, or draw.");
+      return;
+    }
+
     setError("");
     const tc = TIME_CONTROL_LABELS[timeControl] || timeControl;
 
@@ -91,6 +98,8 @@ export default function SubmitGame() {
       timeControl: tc,
       averageRating: Number(averageRating) || null,
       reviewNotes: reviewNotes.trim() || null,
+      playerColor,
+      gameResult,
     });
   }
 
@@ -296,6 +305,82 @@ export default function SubmitGame() {
                   <option value="rapid">Rapid (10-30 min)</option>
                   <option value="classical">Classical (&gt;30 min)</option>
                   <option value="daily">Daily / Correspondence</option>
+                </select>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="6" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+                You played as
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={playerColor}
+                  onChange={(e) => setPlayerColor(e.target.value)}
+                >
+                  <option value="white">White</option>
+                  <option value="black">Black</option>
+                </select>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 5 2-7L2 9h7z" />
+                </svg>
+                Your result
+              </label>
+              <div className="select-wrapper">
+                <select
+                  value={gameResult}
+                  onChange={(e) => setGameResult(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Select win / loss / draw
+                  </option>
+                  <option value="win">Win</option>
+                  <option value="lose">Loss</option>
+                  <option value="draw">Draw</option>
                 </select>
                 <svg
                   width="16"
