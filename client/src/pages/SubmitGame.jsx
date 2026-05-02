@@ -321,17 +321,7 @@ export default function SubmitGame() {
 
             <div className="form-group">
               <label>
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="6" />
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
+
                 You played as
               </label>
               <div className="select-wrapper">
@@ -357,16 +347,7 @@ export default function SubmitGame() {
 
             <div className="form-group">
               <label>
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 5 2-7L2 9h7z" />
-                </svg>
+
                 Your result
               </label>
               <div className="select-wrapper">
