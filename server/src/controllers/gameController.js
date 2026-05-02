@@ -1,5 +1,6 @@
 import { prisma } from "../../config/db.js";
 import { detectOpeningFromPgn } from "../utils/openingDetection.js";
+import { validatePlayablePgn } from "../utils/pgnValidation.js";
 
 const AUTHOR_SELECT = { id: true, displayName: true };
 const MAX_LIMIT = 50;
@@ -168,6 +169,13 @@ export async function createGame(req, res) {
     }
 
     const cleanPgn = pgn.trim();
+    const pgnCheck = validatePlayablePgn(cleanPgn);
+    if (!pgnCheck.ok) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: [{ field: "pgn", message: pgnCheck.message }],
+      });
+    }
     const cleanTimeControl = timeControl.trim();
     const customTitle = typeof title === "string" ? title.trim() : "";
     const detectedOpening = detectOpeningFromPgn(cleanPgn);
