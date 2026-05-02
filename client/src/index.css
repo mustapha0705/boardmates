@@ -1,0 +1,14 @@
+/* Base: reduces bright white flash while auth/session state resolves */
+html {
+  background-color: #0b1220;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}

@@ -22,8 +22,27 @@ function RequireAuth({ children }) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <p style={{ color: "#6b6b7a" }}>Loading…</p>
+      <div className="app-auth-loading" role="status" aria-live="polite" aria-busy="true">
+        <div className="app-auth-loading-card">
+          <div className="app-auth-loading-brand">
+            <div className="app-auth-loading-logo" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <span className="app-auth-loading-title">Boardmates</span>
+          </div>
+          <div className="app-auth-loading-grid" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <p className="app-auth-loading-msg">
+            Restoring your session<span aria-hidden="true">…</span>
+          </p>
+        </div>
       </div>
     );
   }

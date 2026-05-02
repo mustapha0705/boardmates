@@ -1,0 +1,138 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap");
+
+/* Full-screen session restore (RequireAuth) — dark, matches Boardmates default theme */
+
+.app-auth-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #1e293b 0%, #0b1220 55%, #070b12 100%);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.app-auth-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  max-width: 320px;
+  text-align: center;
+}
+
+.app-auth-loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-auth-loading-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  padding: 6px;
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.35);
+}
+
+.app-auth-loading-logo span {
+  border-radius: 3px;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.app-auth-loading-logo span:nth-child(2),
+.app-auth-loading-logo span:nth-child(3) {
+  opacity: 0.55;
+}
+
+.app-auth-loading-title {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.app-auth-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 12px);
+  gap: 8px;
+  height: 12px;
+}
+
+.app-auth-loading-grid span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%);
+  animation: app-auth-pulse 1.05s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+}
+
+.app-auth-loading-grid span:nth-child(1) {
+  animation-delay: 0ms;
+}
+.app-auth-loading-grid span:nth-child(2) {
+  animation-delay: 120ms;
+}
+.app-auth-loading-grid span:nth-child(3) {
+  animation-delay: 240ms;
+}
+.app-auth-loading-grid span:nth-child(4) {
+  animation-delay: 360ms;
+}
+
+@keyframes app-auth-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1);
+  }
+}
+
+.app-auth-loading-msg {
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+.app-auth-loading-msg span {
+  display: inline-block;
+  animation: app-auth-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes app-auth-dots {
+  0%,
+  20% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-auth-loading-grid span {
+    animation: none;
+    opacity: 0.85;
+  }
+  .app-auth-loading-msg span {
+    animation: none;
+  }
+}
