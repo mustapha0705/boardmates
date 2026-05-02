@@ -89,8 +89,14 @@ export default function Feed() {
       )}
 
       {isLoading ? (
-        <div className="feed-empty">
-          <p className="feed-empty-title">Loading games…</p>
+        <div className="feed-loading" role="status" aria-live="polite" aria-busy="true">
+          <div className="feed-loading-grid" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <p className="feed-loading-msg">Loading games…</p>
         </div>
       ) : isError ? (
         <div className="feed-empty">
