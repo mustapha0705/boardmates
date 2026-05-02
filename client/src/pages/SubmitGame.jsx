@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createGame } from "../services/api";
+import { validatePlayablePgn } from "../utils/pgnValidation";
 import "../styles/submit-game.css";
 
 const TIME_CONTROL_LABELS = {
@@ -37,7 +38,8 @@ export default function SubmitGame() {
       navigate("/");
     },
     onError: (err) => {
-      setError(err.message || "Failed to submit game");
+      const fromApi = err?.body?.errors?.[0]?.message;
+      setError(fromApi || err.message || "Failed to submit game");
     },
   });
 
@@ -86,6 +88,12 @@ export default function SubmitGame() {
 
     if (!gameResult) {
       setError("Choose your result: win, loss, or draw.");
+      return;
+    }
+
+    const pgnCheck = validatePlayablePgn(pgn);
+    if (!pgnCheck.ok) {
+      setError(pgnCheck.message);
       return;
     }
 
