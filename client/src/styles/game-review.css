@@ -447,6 +447,20 @@
   flex-shrink: 0;
 }
 
+.review-header-guest-claim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.review-header-guest-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 /* Complete Review button */
 .complete-review-btn {
   display: flex;

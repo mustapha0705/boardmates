@@ -70,19 +70,26 @@ function App() {
         <AuthProvider>
           <Analytics />
           <Routes>
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Layout />
-                </RequireAuth>
-              }
-            >
+            <Route path="/" element={<Layout />}>
               <Route index element={<Feed />} />
-              <Route path="profile" element={<Profile />} />
               <Route path="submit" element={<SubmitGame />} />
-              <Route path="review-game/:id" element={<ReviewGame />} />
               <Route path="game-detail/:id" element={<GameDetail />} />
+              <Route
+                path="profile"
+                element={
+                  <RequireAuth>
+                    <Profile />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="review-game/:id"
+                element={
+                  <RequireAuth>
+                    <ReviewGame />
+                  </RequireAuth>
+                }
+              />
             </Route>
             <Route
               path="/login"

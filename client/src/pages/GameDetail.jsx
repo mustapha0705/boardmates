@@ -8,6 +8,7 @@ import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
 import { useAuth } from "../context/useAuth";
+import AuthPromptActions from "../components/AuthPromptActions.jsx";
 import "../styles/game-review.css";
 import { Chess } from "chess.js";
 import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
@@ -59,7 +60,7 @@ export default function GameDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { viewerId } = useAuth();
+  const { viewerId, isAuthenticated } = useAuth();
 
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
@@ -175,6 +176,8 @@ export default function GameDetail() {
   const outcomeLine = formatAuthorOutcomeLine(game);
   const isAuthor = viewerId && (game.authorId === viewerId || game.author?.id === viewerId);
   const canClaimFromDetail = game.status === "pending" && !isAuthor;
+  const showGuestClaimPrompt = canClaimFromDetail && !isAuthenticated;
+  const showClaimFlow = canClaimFromDetail && isAuthenticated;
 
   return (
     <main className="review-container">
@@ -191,7 +194,13 @@ export default function GameDetail() {
           ) : null}
         </div>
         <div className="review-header-actions">
-          {canClaimFromDetail ? (
+          {showGuestClaimPrompt ? (
+            <div className="review-header-guest-claim">
+              <span className="review-header-guest-label">Review this game</span>
+              <AuthPromptActions signupFirst />
+            </div>
+          ) : null}
+          {showClaimFlow ? (
             showClaimConfirm ? (
               <div className="claim-confirm-inline">
                 <span className="confirm-text">Start review?</span>

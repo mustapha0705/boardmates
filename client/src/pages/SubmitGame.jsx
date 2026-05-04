@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createGame } from "../services/api";
 import { validatePlayablePgn } from "../utils/pgnValidation";
+import { useAuth } from "../context/useAuth";
+import AuthPromptActions from "../components/AuthPromptActions.jsx";
 import "../styles/submit-game.css";
 
 const TIME_CONTROL_LABELS = {
@@ -15,7 +17,9 @@ const TIME_CONTROL_LABELS = {
 
 export default function SubmitGame() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
 
   const [activeTab, setActiveTab] = useState("upload");
   const [pgnText, setPgnText] = useState("");
@@ -75,6 +79,11 @@ export default function SubmitGame() {
   }
 
   function handleSubmit() {
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+
     const pgn = activeTab === "paste" ? pgnText.trim() : fileContent.trim();
 
     if (!pgn) {
@@ -117,9 +126,18 @@ export default function SubmitGame() {
       <div className="page">
         <main className="container">
           <div className="title-section">
-            <h1>Submit a Game</h1>
-            <p>Share your chess game for human review.</p>
+            <h1>Submit Game</h1>
+            <p>Submit your game and get a human review.</p>
           </div>
+
+          {!isAuthenticated ? (
+            <div className="submit-guest-banner" role="region" aria-label="Sign in to submit">
+              <p className="submit-guest-banner-text">
+                To submit a game for review, create an account or log in.
+              </p>
+              <AuthPromptActions signupFirst />
+            </div>
+          ) : null}
 
           {error && <div className="submit-error">{error}</div>}
 
@@ -407,17 +425,43 @@ export default function SubmitGame() {
           </div>
 
           <div className="submit-section">
-            <button
-              className="primary-btn"
-              onClick={handleSubmit}
-              disabled={mutation.isPending}
-            >
-              <svg xmlns="http://w3.org" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
-              {mutation.isPending ? "Submitting..." : "Submit for Review"}
-            </button>
-            <p className="disclaimer">
-              By submitting, you agree to our community guidelines.
-            </p>
+            {isAuthenticated ? (
+              <>
+                <button
+                  className="primary-btn"
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={mutation.isPending}
+                >
+                  <svg xmlns="http://w3.org" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
+                  {mutation.isPending ? "Submitting..." : "Submit for Review"}
+                </button>
+                <p className="disclaimer">
+                  By submitting, you agree to our community guidelines.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="submit-guest-cta-wrap">
+                  <p className="submit-guest-cta-lead">Ready to submit a game?</p>
+                  <AuthPromptActions signupFirst />
+                  <p className="submit-guest-extra">
+                    New to Boardmates?{" "}
+                    <Link to="/signup" state={{ from: location }} className="submit-guest-inline-link">
+                      Create your free account
+                    </Link>
+                    {" "}— or{" "}
+                    <Link to="/login" state={{ from: location }} className="submit-guest-inline-link">
+                      log in
+                    </Link>
+                    .
+                  </p>
+                </div>
+                <p className="disclaimer">
+                  Create an account to submit — it only takes a minute.
+                </p>
+              </>
+            )}
           </div>
         </main>
       </div>

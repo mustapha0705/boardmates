@@ -215,6 +215,54 @@
   background: var(--color-danger-soft-bg);
 }
 
+.sb-signup-highlight {
+  padding: 0 10px 10px;
+}
+
+.sb-signup-highlight-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--color-brand) 14%, transparent);
+  color: var(--color-brand);
+  border: 0.5px solid color-mix(in srgb, var(--color-brand) 28%, transparent);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sb-signup-highlight-btn:hover {
+  background: color-mix(in srgb, var(--color-brand) 22%, transparent);
+}
+
+.sb-guest-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sb-footer-signup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-brand) 18%, transparent);
+  color: var(--color-brand);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.sb-footer-signup-icon:hover {
+  background: color-mix(in srgb, var(--color-brand) 28%, transparent);
+}
+
 /* ── Main area ── */
 .main {
   flex: 1;
@@ -244,7 +292,37 @@
   font-size: 13px;
   color: var(--color-text-tertiary);
 }
-.topbar-right { display: flex; gap: 8px; }
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+
+.topbar-auth-link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.topbar-auth-login {
+  color: var(--color-text-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-secondary);
+}
+
+.topbar-auth-login:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+.topbar-auth-signup {
+  background: var(--color-brand);
+  color: var(--color-brand-contrast);
+}
+
+.topbar-auth-signup:hover {
+  opacity: 0.92;
+}
 
 .icon-btn {
   width: 34px;
@@ -270,7 +348,9 @@
 @media (max-width: 768px) {
   .mobile-only { display: initial; }
   .desktop-only { display: none; }
-  .topbar-right { visibility: hidden; }
+  .topbar-right:not(.topbar-right--guest) {
+    visibility: hidden;
+  }
 }
 
 @media (min-width: 769px) {

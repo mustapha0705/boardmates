@@ -4,6 +4,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import { useAuth } from "../context/useAuth";
 import { fetchGames, claimReview } from "../services/api";
 import GameCard from "../components/GameCard.jsx";
+import AuthPromptActions from "../components/AuthPromptActions.jsx";
 import "../styles/feed.css";
 
 const PAGE_SIZE = 10;
@@ -11,7 +12,7 @@ const PAGE_SIZE = 10;
 export default function Feed() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { viewerId, loading } = useAuth();
+  const { viewerId, loading, isAuthenticated } = useAuth();
   const identityReady = Boolean(viewerId);
   const authLoading = loading && !identityReady;
   const sentinelRef = useRef(null);
@@ -79,8 +80,18 @@ export default function Feed() {
   return (
     <main className="feed">
       <title>Boardmates | Feed</title>
-      {/* <h1 className="feed-heading">Review Feed</h1>
-      <p className="feed-sub">Games waiting for your strategic feedback</p> */}
+
+      {!isAuthenticated ? (
+        <div className="feed-guest-banner" role="region" aria-label="Create an account">
+          <div className="feed-guest-banner-copy">
+            <span className="feed-guest-banner-title">Join Boardmates</span>
+            <span className="feed-guest-banner-sub">
+              Sign up to submit games, claim reviews, and build your profile.
+            </span>
+          </div>
+          <AuthPromptActions signupFirst />
+        </div>
+      ) : null}
 
       {claimError && (
         <div className="feed-claim-error" role="alert">
@@ -116,6 +127,12 @@ export default function Feed() {
           <Link to="/submit" className="feed-empty-cta">
             Submit a Game →
           </Link>
+          {!isAuthenticated ? (
+            <div className="feed-empty-auth">
+              <p className="feed-empty-auth-label">Want to participate?</p>
+              <AuthPromptActions signupFirst />
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="feed-list">
@@ -125,6 +142,7 @@ export default function Feed() {
               game={game}
               currentUserId={viewerId}
               authLoading={authLoading}
+              isAuthenticated={isAuthenticated}
               onStartReview={handleStartReview}
               onOpenConfirm={(gameId) => setConfirmingId(gameId)}
               onCancelConfirm={() => setConfirmingId(null)}

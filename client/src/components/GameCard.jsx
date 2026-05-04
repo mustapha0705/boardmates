@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
+import AuthPromptActions from "./AuthPromptActions.jsx";
 
 function getInitial(name) {
   if (!name) return "?";
@@ -11,6 +12,7 @@ export default function GameCard({
   game,
   currentUserId,
   authLoading,
+  isAuthenticated,
   onStartReview,
   onOpenConfirm,
   onCancelConfirm,
@@ -109,7 +111,9 @@ export default function GameCard({
         </div>
       </div>
 
-      {status === "pending" && !isAuthor ? (
+      {status === "pending" && !isAuthor && !isAuthenticated ? (
+        <AuthPromptActions signupFirst className="game-card-auth-prompt" compact />
+      ) : status === "pending" && !isAuthor && isAuthenticated ? (
         confirmOpen ? (
           <div className="review-confirm-inline">
             <span className="review-confirm-text">Start review?</span>

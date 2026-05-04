@@ -129,7 +129,13 @@ export default function Login() {
           </form>
 
           <p className="auth-footer-text">
-            Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+            Don&apos;t have an account?{" "}
+            <Link
+              to="/signup"
+              state={location.state?.from != null ? { from: location.state.from } : undefined}
+            >
+              Sign up
+            </Link>
           </p>
         </div>
 

@@ -257,6 +257,71 @@ textarea {
   margin-bottom: 16px;
 }
 
+.submit-guest-banner {
+  background: var(--color-info-soft-bg);
+  color: var(--color-info-soft-text);
+  border: 0.5px solid color-mix(in srgb, var(--color-info-soft-text) 22%, transparent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submit-guest-banner-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.submit-guest-banner .auth-prompt-actions {
+  justify-content: flex-start;
+}
+
+.submit-guest-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.submit-guest-cta-lead {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.submit-guest-cta-wrap .auth-prompt-actions {
+  justify-content: stretch;
+}
+
+.submit-guest-cta-wrap .auth-prompt-btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.submit-guest-extra {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.submit-guest-inline-link {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.submit-guest-inline-link:hover {
+  text-decoration: underline;
+}
+
 .file-name {
   word-break: break-all;
   color: var(--color-success-soft-text);

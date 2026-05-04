@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import AuthPromptActions from "./AuthPromptActions.jsx";
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
   const isActive = (path) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
@@ -54,6 +55,14 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
       </div>
 
       <nav className="sb-nav">
+        {!isAuthenticated && !collapsed ? (
+          <div className="sb-signup-highlight">
+            <Link to="/signup" state={{ from: location }} className="sb-signup-highlight-btn">
+              Sign up — it&rsquo;s free
+            </Link>
+          </div>
+        ) : null}
+
         <Link className={`nav-item ${isActive("/") ? "active" : ""}`} to="/" aria-label={collapsed ? "Feed" : undefined}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -80,14 +89,35 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
       </nav>
 
       <div className="sb-footer">
-        <button type="button" className="signout-btn" aria-label={collapsed ? "Sign out" : undefined} onClick={handleSignOut}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          {!collapsed && <span className="nav-label">Sign out</span>}
-        </button>
+        {isAuthenticated ? (
+          <button type="button" className="signout-btn" aria-label={collapsed ? "Sign out" : undefined} onClick={handleSignOut}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            {!collapsed && <span className="nav-label">Sign out</span>}
+          </button>
+        ) : collapsed ? (
+          <Link
+            to="/signup"
+            state={{ from: location }}
+            className="sb-footer-signup-icon"
+            aria-label="Sign up"
+            title="Sign up"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/>
+              <line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </Link>
+        ) : (
+          <div className="sb-guest-auth">
+            <AuthPromptActions signupFirst className="auth-prompt-actions--stacked" />
+          </div>
+        )}
       </div>
     </aside>
   );
