@@ -39,9 +39,9 @@ function RequireAuth({ children }) {
             <span />
             <span />
           </div>
-          <p className="app-auth-loading-msg">
+          {/* <p className="app-auth-loading-msg">
             Restoring your session<span aria-hidden="true">…</span>
-          </p>
+          </p> */}
         </div>
       </div>
     );
