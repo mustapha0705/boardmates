@@ -60,7 +60,7 @@ export default function GameDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { viewerId, isAuthenticated } = useAuth();
+  const { viewerId, user, isAuthenticated } = useAuth();
 
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
@@ -176,8 +176,21 @@ export default function GameDetail() {
   const outcomeLine = formatAuthorOutcomeLine(game);
   const isAuthor = viewerId && (game.authorId === viewerId || game.author?.id === viewerId);
   const canClaimFromDetail = game.status === "pending" && !isAuthor;
+  const viewerRapidRating = Number(user?.rapidRating);
+  const gameAverageRating = Number(game.averageRating);
+  const hasViewerRating = Number.isFinite(viewerRapidRating) && viewerRapidRating > 0;
+  const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
+  const minRequiredRating = hasGameAverageRating ? gameAverageRating + 200 : null;
+  const isRatingEligible = hasViewerRating && hasGameAverageRating && viewerRapidRating >= minRequiredRating;
+  const reviewEligibilityMessage = !hasViewerRating
+    ? "Set your chess account rating to review games."
+    : !hasGameAverageRating
+      ? "This game has no average rating yet."
+      : !isRatingEligible
+        ? `You need ${minRequiredRating}+ rapid to review this game.`
+        : "";
   const showGuestClaimPrompt = canClaimFromDetail && !isAuthenticated;
-  const showClaimFlow = canClaimFromDetail && isAuthenticated;
+  const showClaimFlow = canClaimFromDetail && isAuthenticated && isRatingEligible;
 
   return (
     <main className="review-container">
@@ -199,6 +212,9 @@ export default function GameDetail() {
               <span className="review-header-guest-label">Review this game</span>
               <AuthPromptActions signupFirst />
             </div>
+          ) : null}
+          {canClaimFromDetail && isAuthenticated && !isRatingEligible ? (
+            <p className="review-header-guest-label">{reviewEligibilityMessage}</p>
           ) : null}
           {showClaimFlow ? (
             showClaimConfirm ? (

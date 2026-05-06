@@ -12,7 +12,7 @@ const PAGE_SIZE = 10;
 export default function Feed() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { viewerId, loading, isAuthenticated } = useAuth();
+  const { viewerId, user, loading, isAuthenticated } = useAuth();
   const identityReady = Boolean(viewerId);
   const authLoading = loading && !identityReady;
   const sentinelRef = useRef(null);
@@ -59,6 +59,38 @@ export default function Feed() {
   );
 
   const games = data?.pages.flatMap((page) => page.games) ?? [];
+  const viewerRapidRating = Number(user?.rapidRating);
+
+  const getReviewEligibility = useCallback(
+    (game) => {
+      const gameAverageRating = Number(game?.averageRating);
+      const hasViewerRating = Number.isFinite(viewerRapidRating) && viewerRapidRating > 0;
+      const hasGameRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
+
+      if (!hasViewerRating) {
+        return {
+          canReview: false,
+          message: "Set your chess account rating to review games",
+        };
+      }
+      if (!hasGameRating) {
+        return {
+          canReview: false,
+          message: "Game rating unavailable",
+        };
+      }
+
+      const minRequired = gameAverageRating + 200;
+      if (viewerRapidRating < minRequired) {
+        return {
+          canReview: false,
+          message: `Need ${minRequired}+ rapid`,
+        };
+      }
+      return { canReview: true, message: "" };
+    },
+    [viewerRapidRating],
+  );
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -136,20 +168,25 @@ export default function Feed() {
         </div>
       ) : (
         <div className="feed-list">
-          {games.map((game) => (
+          {games.map((game) => {
+            const eligibility = getReviewEligibility(game);
+            return (
             <GameCard
               key={game.id}
               game={game}
               currentUserId={viewerId}
               authLoading={authLoading}
               isAuthenticated={isAuthenticated}
+              canReview={eligibility.canReview}
+              reviewEligibilityMessage={eligibility.message}
               onStartReview={handleStartReview}
               onOpenConfirm={(gameId) => setConfirmingId(gameId)}
               onCancelConfirm={() => setConfirmingId(null)}
               confirmOpen={confirmingId === game.id}
               claiming={claimingId === game.id}
             />
-          ))}
+            );
+          })}
         </div>
       )}
 

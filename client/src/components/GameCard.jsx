@@ -13,6 +13,8 @@ export default function GameCard({
   currentUserId,
   authLoading,
   isAuthenticated,
+  canReview,
+  reviewEligibilityMessage,
   onStartReview,
   onOpenConfirm,
   onCancelConfirm,
@@ -113,6 +115,10 @@ export default function GameCard({
 
       {status === "pending" && !isAuthor && !isAuthenticated ? (
         <AuthPromptActions signupFirst className="game-card-auth-prompt" compact />
+      ) : status === "pending" && !isAuthor && isAuthenticated && !canReview ? (
+        <button type="button" className="review-btn btn-locked" disabled title={reviewEligibilityMessage || undefined}>
+          {reviewEligibilityMessage || "Not eligible to review"}
+        </button>
       ) : status === "pending" && !isAuthor && isAuthenticated ? (
         confirmOpen ? (
           <div className="review-confirm-inline">
