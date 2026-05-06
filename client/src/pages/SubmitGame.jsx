@@ -29,7 +29,7 @@ export default function SubmitGame() {
   const [timeControl, setTimeControl] = useState("blitz");
   const [customTitle, setCustomTitle] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
-  const [playerColor, setPlayerColor] = useState("white");
+  const [playerColor, setPlayerColor] = useState("");
   const [gameResult, setGameResult] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
@@ -97,6 +97,11 @@ export default function SubmitGame() {
 
     if (!gameResult) {
       setError("Choose your result: win, loss, or draw.");
+      return;
+    }
+
+    if (!playerColor) {
+      setError("Choose whether you played as White or Black.");
       return;
     }
 
@@ -354,7 +359,11 @@ export default function SubmitGame() {
                 <select
                   value={playerColor}
                   onChange={(e) => setPlayerColor(e.target.value)}
+                  required
                 >
+                  <option value="" disabled>
+                    Select White or Black
+                  </option>
                   <option value="white">White</option>
                   <option value="black">Black</option>
                 </select>
