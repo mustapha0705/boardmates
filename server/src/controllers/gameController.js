@@ -7,6 +7,7 @@ const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 10;
 const PLAYER_COLORS = new Set(["white", "black"]);
 const GAME_RESULTS = new Set(["win", "lose", "draw"]);
+const MIN_REVIEW_RATING_GAP = 200;
 
 /** Prisma `Json` hit recursion limits on deep chess trees; we store a Text column of JSON. */
 function serializeAnalysisTreeForDb(value) {
@@ -288,6 +289,27 @@ export async function claimGame(req, res) {
     if (!game) return res.status(404).json({ message: "Game not found" });
     if (game.authorId === req.user.id) return res.status(403).json({ message: "You cannot review your own game" });
     if (game.status !== "pending") return res.status(409).json({ message: "Game is already being reviewed" });
+
+    const reviewerRapidRating = Number(req.user?.rapidRating);
+    const gameAverageRating = Number(game.averageRating);
+    const hasReviewerRapidRating = Number.isFinite(reviewerRapidRating) && reviewerRapidRating > 0;
+    const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
+
+    if (!hasReviewerRapidRating) {
+      return res.status(403).json({
+        message: "Add your rapid rating to review games.",
+      });
+    }
+    if (!hasGameAverageRating) {
+      return res.status(409).json({
+        message: "This game is missing an average rating and cannot be claimed yet.",
+      });
+    }
+    if (reviewerRapidRating < gameAverageRating + MIN_REVIEW_RATING_GAP) {
+      return res.status(403).json({
+        message: `You need a rapid rating of at least ${gameAverageRating + MIN_REVIEW_RATING_GAP} to review this game.`,
+      });
+    }
 
     const updated = await prisma.game.update({
       where: { id: game.id },
