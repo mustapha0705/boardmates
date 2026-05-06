@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { STATUS_CONFIG } from "../constants/gameStatus";
 import { formatDate } from "../utils/time";
-import AuthPromptActions from "./AuthPromptActions.jsx";
 
 function getInitial(name) {
   if (!name) return "?";
@@ -114,7 +113,9 @@ export default function GameCard({
       </div>
 
       {status === "pending" && !isAuthor && !isAuthenticated ? (
-        <AuthPromptActions signupFirst className="game-card-auth-prompt" compact />
+        <button type="button" className="review-btn btn-locked" disabled title="Sign in to review games">
+          Review Game (Locked)
+        </button>
       ) : status === "pending" && !isAuthor && isAuthenticated && !canReview ? (
         <button type="button" className="review-btn btn-locked" disabled title={reviewEligibilityMessage || undefined}>
           {reviewEligibilityMessage || "Not eligible to review"}
