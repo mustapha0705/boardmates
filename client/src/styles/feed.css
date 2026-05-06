@@ -34,8 +34,19 @@
   line-height: 1.4;
 }
 
-.game-card-auth-prompt {
-  max-width: 100%;
+/* Guest: review unavailable — icon only, low emphasis */
+.game-card-review-lock {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  opacity: 0.75;
+  user-select: none;
+  pointer-events: none;
+}
+.game-card-review-lock svg {
+  display: block;
 }
 
 .feed-empty-auth {
@@ -390,14 +401,6 @@
     justify-content: stretch;
   }
   .feed-guest-banner .auth-prompt-btn {
-    flex: 1;
-    justify-content: center;
-  }
-  .game-card-auth-prompt {
-    width: 100%;
-    justify-content: stretch;
-  }
-  .game-card-auth-prompt .auth-prompt-btn {
     flex: 1;
     justify-content: center;
   }

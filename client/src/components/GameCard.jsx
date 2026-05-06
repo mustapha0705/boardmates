@@ -113,9 +113,17 @@ export default function GameCard({
       </div>
 
       {status === "pending" && !isAuthor && !isAuthenticated ? (
-        <button type="button" className="review-btn btn-locked" disabled title="Sign in to review games">
-          Review Game (Locked)
-        </button>
+        <span
+          className="game-card-review-lock"
+          role="img"
+          aria-label="Sign in required to review"
+          title="Sign in to review"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </span>
       ) : status === "pending" && !isAuthor && isAuthenticated && !canReview ? (
         <button type="button" className="review-btn btn-locked" disabled title={reviewEligibilityMessage || undefined}>
           {reviewEligibilityMessage || "Not eligible to review"}
