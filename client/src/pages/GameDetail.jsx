@@ -181,14 +181,17 @@ export default function GameDetail() {
   const hasViewerRating = Number.isFinite(viewerRapidRating) && viewerRapidRating > 0;
   const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
   const minRequiredRating = hasGameAverageRating ? gameAverageRating + 200 : null;
-  const isRatingEligible = hasViewerRating && hasGameAverageRating && viewerRapidRating >= minRequiredRating;
-  const reviewEligibilityMessage = !hasViewerRating
-    ? "Set your chess account rating to review games."
-    : !hasGameAverageRating
-      ? "This game has no average rating yet."
-      : !isRatingEligible
-        ? `You need ${minRequiredRating}+ rapid to review this game.`
-        : "";
+  const isPrivateGame = Boolean(game.isPrivate);
+  const isRatingEligible = isPrivateGame || (hasViewerRating && hasGameAverageRating && viewerRapidRating >= minRequiredRating);
+  const reviewEligibilityMessage = isPrivateGame
+    ? ""
+    : !hasViewerRating
+      ? "Set your chess account rating to review games."
+      : !hasGameAverageRating
+        ? "This game has no average rating yet."
+        : !isRatingEligible
+          ? `You need ${minRequiredRating}+ rapid to review this game.`
+          : "";
   const showGuestClaimPrompt = canClaimFromDetail && !isAuthenticated;
   const showClaimFlow = canClaimFromDetail && isAuthenticated && isRatingEligible;
 
@@ -198,7 +201,10 @@ export default function GameDetail() {
       <div className="review-header">
         <div>
           <h2 className="review-title">{title}</h2>
-          <span className="review-subtitle">{subtitle}</span>
+          <div className="review-subtitle-row">
+            <span className="review-subtitle">{subtitle}</span>
+            {isPrivateGame ? <span className="private-badge">Private</span> : null}
+          </div>
           {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
           {claimError ? (
             <p style={{ marginTop: 8, color: "var(--color-danger-soft-text, #b42318)", fontSize: 13 }}>

@@ -148,6 +148,9 @@ export default function Profile() {
                           <span className="profile-meta-pill">
                             ⏱ {game.timeControl}
                           </span>
+                          {game.isPrivate ? (
+                            <span className="profile-meta-pill profile-private-pill">Private</span>
+                          ) : null}
                           <span className={`profile-status-badge ${badge.className}`}>
                             {badge.label}
                           </span>

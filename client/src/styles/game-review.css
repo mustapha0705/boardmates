@@ -11,6 +11,25 @@
   color: var(--color-text-tertiary);
 }
 
+.review-subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.private-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 .review-outcome-note {
   display: block;
   font-size: 13px;

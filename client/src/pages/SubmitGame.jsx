@@ -30,6 +30,7 @@ export default function SubmitGame() {
   const [customTitle, setCustomTitle] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [playerColor, setPlayerColor] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [gameResult, setGameResult] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
@@ -122,6 +123,7 @@ export default function SubmitGame() {
       reviewNotes: reviewNotes.trim() || null,
       playerColor,
       gameResult,
+      isPrivate,
     });
   }
 
@@ -347,6 +349,25 @@ export default function SubmitGame() {
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Privacy</label>
+              <div className="privacy-toggle">
+                <label className="privacy-toggle-row">
+                  <input
+                    type="checkbox"
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                  />
+                  <span className="privacy-toggle-text">
+                    Private game (only people with the link can claim it)
+                  </span>
+                </label>
+                <p className="privacy-toggle-hint">
+                  Hidden from feed until review is completed.
+                </p>
               </div>
             </div>
 
