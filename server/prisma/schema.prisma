@@ -53,6 +53,7 @@ model Game {
   title         String
   pgn           String
   status        GameStatus @default(pending)
+  isPrivate     Boolean    @default(false) @map("is_private")
   timeControl   String     @map("time_control")
   /// Which side the submitter played
   playerColor   PlayerColor? @map("player_color")

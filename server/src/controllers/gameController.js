@@ -44,6 +44,7 @@ function formatGame(game, { includePgn = false, includeComments = false, include
     authorId: game.authorId,
     title: game.title,
     status: game.status,
+    isPrivate: Boolean(game.isPrivate),
     timeControl: game.timeControl,
     averageRating: game.averageRating,
     playerColor: game.playerColor ?? null,
@@ -83,7 +84,10 @@ export async function listGames(req, res) {
     const limit = clampLimit(req.query.limit);
     const { cursor, status } = req.query;
 
-    const where = {};
+    // Private games should not appear on the feed until completed.
+    const where = {
+      OR: [{ isPrivate: false }, { status: "completed" }],
+    };
 
     if (status) {
       const statuses = status.split(",").map((s) => s.trim());
@@ -155,7 +159,7 @@ export async function getGame(req, res) {
 
 export async function createGame(req, res) {
   try {
-    const { title, pgn, timeControl, averageRating, reviewNotes, playerColor, gameResult } = req.body;
+    const { title, pgn, timeControl, averageRating, reviewNotes, playerColor, gameResult, isPrivate } = req.body;
     const errors = [];
 
     if (!pgn?.trim()) errors.push({ field: "pgn", message: "PGN is required" });
@@ -181,12 +185,14 @@ export async function createGame(req, res) {
     const customTitle = typeof title === "string" ? title.trim() : "";
     const detectedOpening = detectOpeningFromPgn(cleanPgn);
     const resolvedTitle = customTitle || detectedOpening || `Game · ${cleanTimeControl}`;
+    const privateFlag = isPrivate === true;
 
     const game = await prisma.game.create({
       data: {
         title: resolvedTitle,
         pgn: cleanPgn,
         timeControl: cleanTimeControl,
+        isPrivate: privateFlag,
         averageRating: averageRating ? parseInt(averageRating, 10) : null,
         reviewNotes: reviewNotes?.trim() || null,
         playerColor: String(playerColor),
@@ -290,25 +296,29 @@ export async function claimGame(req, res) {
     if (game.authorId === req.user.id) return res.status(403).json({ message: "You cannot review your own game" });
     if (game.status !== "pending") return res.status(409).json({ message: "Game is already being reviewed" });
 
-    const reviewerRapidRating = Number(req.user?.rapidRating);
-    const gameAverageRating = Number(game.averageRating);
-    const hasReviewerRapidRating = Number.isFinite(reviewerRapidRating) && reviewerRapidRating > 0;
-    const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
+    // Private games can be reviewed by anyone with the link (still must be authenticated),
+    // so the rating gap rule is skipped.
+    if (!game.isPrivate) {
+      const reviewerRapidRating = Number(req.user?.rapidRating);
+      const gameAverageRating = Number(game.averageRating);
+      const hasReviewerRapidRating = Number.isFinite(reviewerRapidRating) && reviewerRapidRating > 0;
+      const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
 
-    if (!hasReviewerRapidRating) {
-      return res.status(403).json({
-        message: "Add your rapid rating to review games.",
-      });
-    }
-    if (!hasGameAverageRating) {
-      return res.status(409).json({
-        message: "This game is missing an average rating and cannot be claimed yet.",
-      });
-    }
-    if (reviewerRapidRating < gameAverageRating + MIN_REVIEW_RATING_GAP) {
-      return res.status(403).json({
-        message: `You need a rapid rating of at least ${gameAverageRating + MIN_REVIEW_RATING_GAP} to review this game.`,
-      });
+      if (!hasReviewerRapidRating) {
+        return res.status(403).json({
+          message: "Add your rapid rating to review games.",
+        });
+      }
+      if (!hasGameAverageRating) {
+        return res.status(409).json({
+          message: "This game is missing an average rating and cannot be claimed yet.",
+        });
+      }
+      if (reviewerRapidRating < gameAverageRating + MIN_REVIEW_RATING_GAP) {
+        return res.status(403).json({
+          message: `You need a rapid rating of at least ${gameAverageRating + MIN_REVIEW_RATING_GAP} to review this game.`,
+        });
+      }
     }
 
     const updated = await prisma.game.update({

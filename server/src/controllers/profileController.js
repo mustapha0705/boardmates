@@ -66,6 +66,7 @@ export async function getUserGames(req, res) {
         id: g.id,
         title: g.title,
         status: g.status,
+        isPrivate: Boolean(g.isPrivate),
         timeControl: g.timeControl,
         averageRating: g.averageRating,
         submittedAt: g.createdAt,
