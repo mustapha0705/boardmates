@@ -9,6 +9,7 @@ import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
 import CommentForm from "../components/CommentForm.jsx";
+import GameAverageRatingChip from "../components/GameAverageRatingChip.jsx";
 import "../styles/game-review.css";
 import { serializeAnalysisTreeNode } from "../utils/analysisTree";
 import { playMoveSoundForNode } from "../utils/moveSound";
@@ -86,6 +87,8 @@ function ReviewGameInner({
 
   const isInReview = game?.status === "in_review";
   const isMyReview = game?.reviewer?.id === viewerId;
+  const boardReady = Boolean(tree.root);
+  const isPrivateGame = Boolean(game?.isPrivate);
 
   const handleSelectNode = useCallback((node) => {
     if (!node || node.id === tree.currentNode?.id) return;
@@ -139,28 +142,19 @@ function ReviewGameInner({
     [tree],
   );
 
-  if (!tree.root) {
-    return (
-      <main className="review-container">
-        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Preparing board…</p>
-      </main>
-    );
-  }
-
-  return (
-    <main className="review-container">
-      <title>Boardmates | Review Game</title>
+  const header = (
+    <>
       <div className="review-header">
         <div>
           <h2 className="review-title">{title}</h2>
-          {subtitle && <span className="review-subtitle">{subtitle}</span>}
+          <div className="review-subtitle-row">
+            {subtitle ? <span className="review-subtitle">{subtitle}</span> : null}
+            {isPrivateGame ? <span className="private-badge">Private</span> : null}
+          </div>
           {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
         </div>
         <div className="review-header-actions">
-          {game?.averageRating && (
-            <span className="rating-badge">{game.averageRating} avg</span>
-          )}
-          {isInReview && isMyReview && !showConfirm && (
+          {boardReady && isInReview && isMyReview && !showConfirm && (
             <button
               type="button"
               className="complete-review-btn"
@@ -172,7 +166,7 @@ function ReviewGameInner({
               Complete Review
             </button>
           )}
-          {isInReview && isMyReview && showConfirm && (
+          {boardReady && isInReview && isMyReview && showConfirm && (
             <div className="complete-confirm">
               <span className="confirm-text">Mark as completed?</span>
               {completeError && (
@@ -199,6 +193,28 @@ function ReviewGameInner({
           )}
         </div>
       </div>
+      <div className="review-header-rating-row">
+        <GameAverageRatingChip averageRating={game?.averageRating} />
+      </div>
+    </>
+  );
+
+  if (!tree.root) {
+    return (
+      <main className="review-container">
+        <title>Boardmates | Review Game</title>
+        {header}
+        <p className="review-preparing-msg" role="status" aria-live="polite">
+          Preparing board…
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="review-container">
+      <title>Boardmates | Review Game</title>
+      {header}
 
       {game?.reviewNotes && (
         <div className="review-notes-card">

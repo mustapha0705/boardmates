@@ -9,6 +9,7 @@ import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
 import { useAuth } from "../context/useAuth";
 import AuthPromptActions from "../components/AuthPromptActions.jsx";
+import GameAverageRatingChip from "../components/GameAverageRatingChip.jsx";
 import "../styles/game-review.css";
 import { Chess } from "chess.js";
 import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
@@ -204,6 +205,9 @@ export default function GameDetail() {
           <div className="review-subtitle-row">
             <span className="review-subtitle">{subtitle}</span>
             {isPrivateGame ? <span className="private-badge">Private</span> : null}
+          </div>
+          <div className="review-header-rating-row">
+            <GameAverageRatingChip averageRating={game.averageRating} />
           </div>
           {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
           {claimError ? (
