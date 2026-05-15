@@ -25,8 +25,8 @@ export default function SubmitGame() {
   const [pgnText, setPgnText] = useState("");
   const [fileName, setFileName] = useState("");
   const [fileContent, setFileContent] = useState("");
-  const [averageRating, setAverageRating] = useState("1200");
-  const [timeControl, setTimeControl] = useState("blitz");
+  const [averageRating, setAverageRating] = useState("");
+  const [timeControl, setTimeControl] = useState("");
   const [customTitle, setCustomTitle] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [playerColor, setPlayerColor] = useState("");
@@ -106,6 +106,22 @@ export default function SubmitGame() {
       return;
     }
 
+    if (!timeControl) {
+      setError("Choose a time control.");
+      return;
+    }
+
+    const ratingStr = String(averageRating).trim();
+    if (!ratingStr) {
+      setError("Enter the average rating of both players.");
+      return;
+    }
+    const ratingNum = Number(ratingStr);
+    if (!Number.isFinite(ratingNum) || ratingNum <= 0 || !Number.isInteger(ratingNum)) {
+      setError("Enter a valid average rating (whole number).");
+      return;
+    }
+
     const pgnCheck = validatePlayablePgn(pgn);
     if (!pgnCheck.ok) {
       setError(pgnCheck.message);
@@ -119,7 +135,7 @@ export default function SubmitGame() {
       title: customTitle.trim() || undefined,
       pgn,
       timeControl: tc,
-      averageRating: Number(averageRating) || null,
+      averageRating: ratingNum,
       reviewNotes: reviewNotes.trim() || null,
       playerColor,
       gameResult,
@@ -306,10 +322,16 @@ export default function SubmitGame() {
                 Average Rating
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="e.g. 1500"
                 value={averageRating}
-                onChange={(e) => setAverageRating(e.target.value)}
+                onChange={(e) => {
+                  setAverageRating(e.target.value);
+                  setError("");
+                }}
+                required
               />
             </div>
 
@@ -331,8 +353,15 @@ export default function SubmitGame() {
               <div className="select-wrapper">
                 <select
                   value={timeControl}
-                  onChange={(e) => setTimeControl(e.target.value)}
+                  onChange={(e) => {
+                    setTimeControl(e.target.value);
+                    setError("");
+                  }}
+                  required
                 >
+                  <option value="" disabled>
+                    Select time control
+                  </option>
                   <option value="bullet">Bullet (1 min)</option>
                   <option value="blitz">Blitz (3-5 min)</option>
                   <option value="rapid">Rapid (10-30 min)</option>
