@@ -1,11 +1,42 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/useAuth";
 // import { useTheme } from "../context/ThemeContext";
 import { fetchProfileStats, fetchProfileGames, fetchProfileReviews } from "../services/api";
 import { timeAgo } from "../utils/time";
 import { chessPlatformLabel } from "../utils/chessPlatform";
 import "../styles/profile.css";
+
+const PAGE_SIZE = 10;
+
+const LOADING_MORE_STYLE = {
+  textAlign: "center",
+  color: "var(--color-text-tertiary)",
+  fontSize: 13,
+  padding: 16,
+};
+
+function useInfiniteScrollSentinel(hasNextPage, isFetchingNextPage, fetchNextPage) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  return ref;
+}
 
 const STATUS_BADGE = {
   pending: { label: "Pending", className: "profile-badge-pending" },
@@ -26,24 +57,71 @@ export default function Profile() {
     queryFn: fetchProfileStats,
   });
 
-  const { data: gamesData } = useQuery({
+  const {
+    data: submittedPages,
+    fetchNextPage: fetchNextSubmitted,
+    hasNextPage: hasMoreSubmitted,
+    isFetchingNextPage: isFetchingMoreSubmitted,
+    isLoading: submittedLoading,
+    isError: submittedError,
+  } = useInfiniteQuery({
     queryKey: ["profile", "games"],
-    queryFn: () => fetchProfileGames({ limit: 5 }),
+    queryFn: ({ pageParam }) => fetchProfileGames({ cursor: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+    initialPageParam: undefined,
   });
 
-  const { data: reviewsData } = useQuery({
+  const {
+    data: reviewedPages,
+    fetchNextPage: fetchNextReviewed,
+    hasNextPage: hasMoreReviewed,
+    isFetchingNextPage: isFetchingMoreReviewed,
+    isLoading: reviewedLoading,
+    isError: reviewedError,
+  } = useInfiniteQuery({
     queryKey: ["profile", "reviews", "completed"],
-    queryFn: () => fetchProfileReviews({ status: "completed", limit: 5 }),
+    queryFn: ({ pageParam }) =>
+      fetchProfileReviews({ status: "completed", cursor: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+    initialPageParam: undefined,
   });
 
-  const { data: inProgressData } = useQuery({
+  const {
+    data: inProgressPages,
+    fetchNextPage: fetchNextInProgress,
+    hasNextPage: hasMoreInProgress,
+    isFetchingNextPage: isFetchingMoreInProgress,
+    isLoading: inProgressLoading,
+    isError: inProgressError,
+  } = useInfiniteQuery({
     queryKey: ["profile", "reviews", "in_review"],
-    queryFn: () => fetchProfileReviews({ status: "in_review", limit: 3 }),
+    queryFn: ({ pageParam }) =>
+      fetchProfileReviews({ status: "in_review", cursor: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+    initialPageParam: undefined,
   });
 
-  const submitted = gamesData?.games ?? [];
-  const reviewed = reviewsData?.games ?? [];
-  const inProgress = inProgressData?.games ?? [];
+  const submittedSentinelRef = useInfiniteScrollSentinel(
+    hasMoreSubmitted,
+    isFetchingMoreSubmitted,
+    fetchNextSubmitted,
+  );
+  const reviewedSentinelRef = useInfiniteScrollSentinel(
+    hasMoreReviewed,
+    isFetchingMoreReviewed,
+    fetchNextReviewed,
+  );
+  const inProgressSentinelRef = useInfiniteScrollSentinel(
+    hasMoreInProgress,
+    isFetchingMoreInProgress,
+    fetchNextInProgress,
+  );
+
+  const submitted = submittedPages?.pages.flatMap((p) => p.games) ?? [];
+  const reviewed = reviewedPages?.pages.flatMap((p) => p.games) ?? [];
+  const inProgress = inProgressPages?.pages.flatMap((p) => p.games) ?? [];
+
+  const showInProgressSection = (stats?.inProgress ?? 0) > 0 || inProgress.length > 0;
 
   const displayName = user?.displayName ?? "Player";
   const platformLabel = chessPlatformLabel(user?.chessPlatform);
@@ -126,7 +204,15 @@ export default function Profile() {
                 <span className="badge">{stats?.submitted ?? 0}</span>
               </div>
 
-              {submitted.length === 0 ? (
+              {submittedError ? (
+                <div className="empty-state">
+                  <p>Failed to load submissions.</p>
+                </div>
+              ) : submittedLoading && submitted.length === 0 ? (
+                <p style={LOADING_MORE_STYLE} role="status" aria-live="polite">
+                  Loading games…
+                </p>
+              ) : submitted.length === 0 ? (
                 <div className="empty-state">
                   <p>No games submitted yet.</p>
                   <Link to="/submit" className="empty-cta">
@@ -134,34 +220,43 @@ export default function Profile() {
                   </Link>
                 </div>
               ) : (
-                submitted.map((game) => {
-                  const badge = STATUS_BADGE[game.status] ?? STATUS_BADGE.pending;
-                  return (
-                    <Link
-                      to={`/game-detail/${game.id}`}
-                      className="profile-game-card"
-                      key={game.id}
-                    >
-                      <div className="profile-game-info">
-                        <h3>{game.title}</h3>
-                        <div className="profile-game-meta">
-                          <span className="profile-meta-pill">
-                            ⏱ {game.timeControl}
-                          </span>
-                          {game.isPrivate ? (
-                            <span className="profile-meta-pill profile-private-pill">Private</span>
-                          ) : null}
-                          <span className={`profile-status-badge ${badge.className}`}>
-                            {badge.label}
-                          </span>
+                <>
+                  {submitted.map((game) => {
+                    const badge = STATUS_BADGE[game.status] ?? STATUS_BADGE.pending;
+                    return (
+                      <Link
+                        to={`/game-detail/${game.id}`}
+                        className="profile-game-card"
+                        key={game.id}
+                      >
+                        <div className="profile-game-info">
+                          <h3>{game.title}</h3>
+                          <div className="profile-game-meta">
+                            <span className="profile-meta-pill">
+                              ⏱ {game.timeControl}
+                            </span>
+                            {game.isPrivate ? (
+                              <span className="profile-meta-pill profile-private-pill">Private</span>
+                            ) : null}
+                            <span className={`profile-status-badge ${badge.className}`}>
+                              {badge.label}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <span className="profile-game-date">
-                        {timeAgo(game.submittedAt)}
-                      </span>
-                    </Link>
-                  );
-                })
+                        <span className="profile-game-date">
+                          {timeAgo(game.submittedAt)}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                  {hasMoreSubmitted && (
+                    <div ref={submittedSentinelRef} className="scroll-sentinel">
+                      {isFetchingMoreSubmitted ? (
+                        <p style={LOADING_MORE_STYLE}>Loading more…</p>
+                      ) : null}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -176,7 +271,15 @@ export default function Profile() {
                 <span className="badge">{stats?.reviewed ?? 0}</span>
               </div>
 
-              {reviewed.length === 0 ? (
+              {reviewedError ? (
+                <div className="empty-state">
+                  <p>Failed to load reviewed games.</p>
+                </div>
+              ) : reviewedLoading && reviewed.length === 0 ? (
+                <p style={LOADING_MORE_STYLE} role="status" aria-live="polite">
+                  Loading reviews…
+                </p>
+              ) : reviewed.length === 0 ? (
                 <div className="empty-state">
                   <p>No completed reviews yet.</p>
                   <Link to="/" className="empty-cta">
@@ -184,46 +287,11 @@ export default function Profile() {
                   </Link>
                 </div>
               ) : (
-                reviewed.map((game) => (
-                  <Link
-                    to={`/game-detail/${game.id}`}
-                    className="profile-review-card"
-                    key={game.id}
-                  >
-                    <div className="profile-review-top">
-                      <h3>{game.title}</h3>
-                      <span className="profile-review-tc">
-                        {game.timeControl}
-                      </span>
-                    </div>
-                    <div className="profile-review-bottom">
-                      <span className="profile-review-author">
-                        by {game.author?.displayName ?? "Unknown"}
-                      </span>
-                      <span className="profile-review-time">
-                        {timeAgo(game.submittedAt)}
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              )}
-
-              {inProgress.length > 0 && (
                 <>
-                  <div className="section-header" style={{ marginTop: 20 }}>
-                    <h2>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      In Progress
-                    </h2>
-                    <span className="badge">{inProgress.length}</span>
-                  </div>
-                  {inProgress.map((game) => (
+                  {reviewed.map((game) => (
                     <Link
-                      to={`/review-game/${game.id}`}
-                      className="profile-review-card in-progress"
+                      to={`/game-detail/${game.id}`}
+                      className="profile-review-card"
                       key={game.id}
                     >
                       <div className="profile-review-top">
@@ -236,14 +304,77 @@ export default function Profile() {
                         <span className="profile-review-author">
                           by {game.author?.displayName ?? "Unknown"}
                         </span>
-                        <span className="profile-badge-in-review profile-status-badge">
-                          In Review
+                        <span className="profile-review-time">
+                          {timeAgo(game.submittedAt)}
                         </span>
                       </div>
                     </Link>
                   ))}
+                  {hasMoreReviewed && (
+                    <div ref={reviewedSentinelRef} className="scroll-sentinel">
+                      {isFetchingMoreReviewed ? (
+                        <p style={LOADING_MORE_STYLE}>Loading more…</p>
+                      ) : null}
+                    </div>
+                  )}
                 </>
               )}
+
+              {showInProgressSection ? (
+                <>
+                  <div className="section-header" style={{ marginTop: 20 }}>
+                    <h2>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      In Progress
+                    </h2>
+                    <span className="badge">{stats?.inProgress ?? inProgress.length}</span>
+                  </div>
+                  {inProgressError ? (
+                    <div className="empty-state">
+                      <p>Failed to load in-progress reviews.</p>
+                    </div>
+                  ) : inProgressLoading && inProgress.length === 0 ? (
+                    <p style={LOADING_MORE_STYLE} role="status" aria-live="polite">
+                      Loading…
+                    </p>
+                  ) : (
+                    <>
+                      {inProgress.map((game) => (
+                        <Link
+                          to={`/review-game/${game.id}`}
+                          className="profile-review-card in-progress"
+                          key={game.id}
+                        >
+                          <div className="profile-review-top">
+                            <h3>{game.title}</h3>
+                            <span className="profile-review-tc">
+                              {game.timeControl}
+                            </span>
+                          </div>
+                          <div className="profile-review-bottom">
+                            <span className="profile-review-author">
+                              by {game.author?.displayName ?? "Unknown"}
+                            </span>
+                            <span className="profile-badge-in-review profile-status-badge">
+                              In Review
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                      {hasMoreInProgress && (
+                        <div ref={inProgressSentinelRef} className="scroll-sentinel">
+                          {isFetchingMoreInProgress ? (
+                            <p style={LOADING_MORE_STYLE}>Loading more…</p>
+                          ) : null}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              ) : null}
             </div>
           </div>
         </main>

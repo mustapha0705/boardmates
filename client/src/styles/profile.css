@@ -354,3 +354,8 @@
   .profile-review-card { padding: 11px 12px; }
   .profile-review-top h3 { font-size: 13px; }
 }
+
+/* Infinite scroll sentinel (matches feed) */
+.scroll-sentinel {
+  height: 1px;
+}
