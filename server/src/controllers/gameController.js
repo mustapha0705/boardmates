@@ -8,6 +8,7 @@ const DEFAULT_LIMIT = 10;
 const PLAYER_COLORS = new Set(["white", "black"]);
 const GAME_RESULTS = new Set(["win", "lose", "draw"]);
 const MIN_REVIEW_RATING_GAP = 200;
+const MIN_REVIEW_COMMENTS = 3;
 
 /** Prisma `Json` hit recursion limits on deep chess trees; we store a Text column of JSON. */
 function serializeAnalysisTreeForDb(value) {
@@ -348,6 +349,15 @@ export async function completeReview(req, res) {
     if (!game) return res.status(404).json({ message: "Game not found" });
     if (game.status !== "in_review") return res.status(409).json({ message: "Game is not in review" });
     if (game.reviewerId !== req.user.id) return res.status(403).json({ message: "Only the assigned reviewer can complete this review" });
+
+    const commentCount = await prisma.reviewComment.count({
+      where: { gameId: game.id },
+    });
+    if (commentCount < MIN_REVIEW_COMMENTS) {
+      return res.status(400).json({
+        message: `Add at least ${MIN_REVIEW_COMMENTS} comments before completing the review.`,
+      });
+    }
 
     const { analysisTree } = req.body || {};
     const data = {
