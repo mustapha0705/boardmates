@@ -14,6 +14,7 @@ import "../styles/game-review.css";
 import { serializeAnalysisTreeNode } from "../utils/analysisTree";
 import { playMoveSoundForNode } from "../utils/moveSound";
 import { formatAuthorOutcomeLine } from "../utils/gameOutcome";
+import { MIN_REVIEW_COMMENTS, countSavedReviewComments } from "../constants/review";
 
 function ReviewGameInner({
   game,
@@ -89,6 +90,8 @@ function ReviewGameInner({
   const isMyReview = game?.reviewer?.id === viewerId;
   const boardReady = Boolean(tree.root);
   const isPrivateGame = Boolean(game?.isPrivate);
+  const savedCommentCount = countSavedReviewComments(game?.comments);
+  const hasMinComments = savedCommentCount >= MIN_REVIEW_COMMENTS;
 
   const handleSelectNode = useCallback((node) => {
     if (!node || node.id === tree.currentNode?.id) return;
@@ -154,11 +157,26 @@ function ReviewGameInner({
           {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
         </div>
         <div className="review-header-actions">
+          {boardReady && isInReview && isMyReview && !hasMinComments ? (
+            <p className="review-comment-requirement" role="status">
+              {savedCommentCount}/{MIN_REVIEW_COMMENTS} comments saved — add at least {MIN_REVIEW_COMMENTS} to
+              complete.
+            </p>
+          ) : null}
           {boardReady && isInReview && isMyReview && !showConfirm && (
             <button
               type="button"
               className="complete-review-btn"
-              onClick={() => setShowConfirm(true)}
+              disabled={!hasMinComments}
+              title={
+                hasMinComments
+                  ? undefined
+                  : `Save at least ${MIN_REVIEW_COMMENTS} move comments (${savedCommentCount}/${MIN_REVIEW_COMMENTS})`
+              }
+              onClick={() => {
+                if (!hasMinComments) return;
+                setShowConfirm(true);
+              }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="20 6 9 17 4 12" />
@@ -177,8 +195,11 @@ function ReviewGameInner({
               <button
                 className="confirm-yes-btn"
                 type="button"
-                onClick={() => onCompleteWithAnalysis(serializeAnalysisTreeNode(tree.root))}
-                disabled={completing}
+                onClick={() => {
+                  if (!hasMinComments) return;
+                  onCompleteWithAnalysis(serializeAnalysisTreeNode(tree.root));
+                }}
+                disabled={completing || !hasMinComments}
               >
                 {completing ? "Finishing…" : "Yes, finish"}
               </button>

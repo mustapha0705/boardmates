@@ -473,8 +473,9 @@
 /* Header actions row */
 .review-header-actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -509,8 +510,21 @@
   white-space: nowrap;
   transition: background 0.15s;
 }
-.complete-review-btn:hover {
+.complete-review-btn:hover:not(:disabled) {
   opacity: 0.92;
+}
+.complete-review-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-comment-requirement {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  max-width: 220px;
+  text-align: right;
 }
 
 /* Confirmation inline */
