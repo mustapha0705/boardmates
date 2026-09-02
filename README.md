@@ -2,20 +2,6 @@
 
 Boardmates is a chess review platform where users submit PGNs, claim games for review, annotate move trees, and publish completed analysis.
 
-## Screenshots / Demo
-
-Add your visuals here:
-
-- `docs/screenshots/feed.png` - review feed
-- `docs/screenshots/review.png` - board + move tree + comments
-- `docs/screenshots/profile.png` - profile stats and activity
-- Optional GIF: `docs/demo/review-flow.gif`
-
-You can render them like:
-
-```md
-![Feed](docs/screenshots/feed.png)
-![Review](docs/screenshots/review.png)
 ```
 
 ## Tech Stack
