@@ -77,13 +77,22 @@ Notes:
 
 ### `GET /api/games`
 
-Paginated feed list.
+Paginated public feed list. Private games are never listed, whatever their status.
 
-Query params:
+Query params (all optional, each at most once):
 
-- `cursor` (uuid)
-- `limit` (default `10`, max `50`)
-- `status` (`pending,in_review,completed`, comma-separated)
+- `cursor` — `id` (UUID) of the last game on the previous page. It must still be in the same result set: a public game matching the request's `status` filter.
+- `limit` — positive integer, default `10`; values above `50` are capped at `50`.
+- `status` — comma-separated list of `pending`, `in_review`, `completed`.
+
+Invalid params return `400` with every failing field. A `cursor` that is malformed, unknown, private or outside the `status` filter returns the same error. For example, if the cursor game was claimed while paging `status=pending`, restart from the first page.
+
+```json
+{
+  "message": "Validation failed",
+  "errors": [{ "field": "cursor", "message": "Invalid cursor" }]
+}
+```
 
 **Response shape**
 

@@ -1,10 +1,14 @@
 import { prisma } from "../../config/db.js";
 import { detectOpeningFromPgn } from "../utils/openingDetection.js";
 import { validatePlayablePgn } from "../utils/pgnValidation.js";
+import {
+  INVALID_CURSOR_ERROR,
+  buildFeedCursorLookupArgs,
+  buildFeedFindManyArgs,
+  parseFeedQuery,
+} from "../utils/feedQuery.js";
 
 const AUTHOR_SELECT = { id: true, displayName: true };
-const MAX_LIMIT = 50;
-const DEFAULT_LIMIT = 10;
 const PLAYER_COLORS = new Set(["white", "black"]);
 const GAME_RESULTS = new Set(["win", "lose", "draw"]);
 const MIN_REVIEW_RATING_GAP = 200;
@@ -32,11 +36,6 @@ function parseAnalysisTreeFromDb(stored) {
   } catch {
     return null;
   }
-}
-
-function clampLimit(raw) {
-  const n = parseInt(raw, 10) || DEFAULT_LIMIT;
-  return Math.min(Math.max(n, 1), MAX_LIMIT);
 }
 
 function formatGame(game, { includePgn = false, includeComments = false, includeAnalysisTree = false } = {}) {
@@ -82,37 +81,22 @@ function formatGame(game, { includePgn = false, includeComments = false, include
 
 export async function listGames(req, res) {
   try {
-    const limit = clampLimit(req.query.limit);
-    const { cursor, status } = req.query;
-
-    // Private games should not appear on the feed until completed.
-    const where = {
-      OR: [{ isPrivate: false }, { status: "completed" }],
-    };
-
-    if (status) {
-      const statuses = status.split(",").map((s) => s.trim());
-      where.status = { in: statuses };
+    const parsed = parseFeedQuery(req.query);
+    if (!parsed.ok) {
+      return res.status(400).json({ message: "Validation failed", errors: parsed.errors });
     }
+    const { limit, statuses, cursor } = parsed.value;
 
+    let cursorGame = null;
     if (cursor) {
-      const cursorGame = await prisma.game.findUnique({
-        where: { id: cursor },
-        select: { createdAt: true },
-      });
-
-      if (cursorGame) {
-        where.OR = [
-          { createdAt: { lt: cursorGame.createdAt } },
-          { createdAt: cursorGame.createdAt, id: { lt: cursor } },
-        ];
+      cursorGame = await prisma.game.findFirst(buildFeedCursorLookupArgs(cursor, statuses));
+      if (!cursorGame) {
+        return res.status(400).json({ message: "Validation failed", errors: [INVALID_CURSOR_ERROR] });
       }
     }
 
     const games = await prisma.game.findMany({
-      where,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      take: limit + 1,
+      ...buildFeedFindManyArgs({ limit, statuses, cursor, cursorGame }),
       include: {
         author: { select: AUTHOR_SELECT },
         reviewer: { select: AUTHOR_SELECT },
