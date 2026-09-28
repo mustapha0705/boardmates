@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import "../styles/layout.css";
 
-export default function Layout() {
+export default function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -34,7 +34,7 @@ export default function Layout() {
 
       <div className="main">
         <Topbar onMenuClick={() => setMobileOpen(true)} />
-        <Outlet />
+        {children ?? <Outlet />}
       </div>
     </div>
   );

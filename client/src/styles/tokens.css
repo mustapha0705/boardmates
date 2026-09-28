@@ -1,0 +1,141 @@
+/*
+ * Boardmates design tokens — translated from the approved Claude Design export
+ * (redesign-reference/Boardmates.dc.html: "Foundations" screen plus inline styles).
+ *
+ * Dark-only for the first redesigned release. Tokens live on :root so they apply
+ * regardless of the legacy data-theme attribute set by ThemeContext.
+ *
+ * Breakpoints used by the redesigned UI:
+ *   mobile   <= 640px
+ *   tablet   641px - 900px
+ *   desktop  > 900px (wide layouts open up above 1080px)
+ */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap");
+
+:root {
+  /* Surfaces */
+  --bm-page: #08111f;
+  --bm-surface-sunken: #0b1524;
+  --bm-surface: #0f1a2b;
+  --bm-surface-elevated: #152238;
+  --bm-surface-selected: #1c2b44;
+  --bm-surface-hover: #16233a;
+  --bm-card-hover: #12203a;
+
+  /* Lines */
+  --bm-line-subtle: #1b2942;
+  --bm-line: #26364f;
+  --bm-line-strong: #33456b;
+  --bm-line-overlay: #2e4160;
+
+  /* Text */
+  --bm-text: #f4f7fb;
+  --bm-text-strong: #e4eaf2;
+  --bm-text-body: #d5deea;
+  --bm-text-secondary: #a5b2c5;
+  --bm-text-muted: #7e8ca2;
+
+  /* Action */
+  --bm-action: #69a7ff;
+  --bm-action-hover: #8dbeff;
+  --bm-on-action: #08111f;
+  --bm-action-tint: rgba(105, 167, 255, 0.13);
+  --bm-action-border: rgba(105, 167, 255, 0.34);
+
+  /* Planned AI assistance (never used to imply a live feature) */
+  --bm-ai: #55c5d8;
+  --bm-ai-hover: #7bd8e7;
+  --bm-on-ai: #06222a;
+  --bm-ai-surface: #0d2028;
+  --bm-ai-border: rgba(85, 197, 216, 0.32);
+
+  /* Human reviewed / success */
+  --bm-approved: #32c48d;
+  --bm-approved-hover: #4bd8a2;
+  --bm-on-approved: #062018;
+  --bm-approved-tint: rgba(50, 196, 141, 0.13);
+  --bm-approved-surface: #12281f;
+  --bm-approved-border: rgba(50, 196, 141, 0.34);
+
+  /* Waiting / warning */
+  --bm-waiting: #f2b84b;
+  --bm-waiting-tint: rgba(242, 184, 75, 0.13);
+  --bm-waiting-surface: #1f1a0e;
+  --bm-waiting-border: rgba(242, 184, 75, 0.36);
+
+  /* Error */
+  --bm-error: #f06d7a;
+  --bm-error-tint: rgba(240, 109, 122, 0.09);
+  --bm-error-border: rgba(240, 109, 122, 0.3);
+
+  --bm-neutral-tint: rgba(126, 140, 162, 0.14);
+  --bm-overlay: rgba(4, 9, 17, 0.72);
+
+  /* Board (decorative previews in this slice) */
+  --bm-board-light: #e8d6b6;
+  --bm-board-dark: #a97b5b;
+  --bm-board-highlight: rgba(242, 184, 75, 0.34);
+  --bm-piece-light: #fbf7ef;
+  --bm-piece-light-edge: #23180e;
+  --bm-piece-dark: #1a2231;
+
+  /* Typography */
+  --bm-font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bm-font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --bm-font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  --bm-size-display: clamp(34px, 6.2vw, 56px);
+  --bm-size-title-xl: clamp(24px, 3.4vw, 29px);
+  --bm-size-title: clamp(21px, 2.6vw, 25px);
+  --bm-size-section: 17px;
+  --bm-size-card: 14.5px;
+  --bm-size-body: 13.5px;
+  --bm-size-body-lg: clamp(14.5px, 1.6vw, 17px);
+  --bm-size-meta: 11.5px;
+  --bm-size-overline: 11px;
+
+  --bm-leading-snug: 1.35;
+  --bm-leading-body: 1.62;
+  --bm-tracking-display: -1.2px;
+  --bm-tracking-title: -0.5px;
+  --bm-tracking-overline: 0.08em;
+
+  /* Space scale */
+  --bm-space-1: 4px;
+  --bm-space-2: 6px;
+  --bm-space-3: 8px;
+  --bm-space-4: 10px;
+  --bm-space-5: 12px;
+  --bm-space-6: 14px;
+  --bm-space-7: 16px;
+  --bm-space-8: 20px;
+  --bm-space-9: 26px;
+  --bm-space-10: 32px;
+  --bm-space-11: 40px;
+  --bm-space-12: 56px;
+  --bm-space-13: 72px;
+
+  /* Radii */
+  --bm-radius-xs: 5px;
+  --bm-radius-sm: 8px;
+  --bm-radius-md: 10px;
+  --bm-radius-lg: 13px;
+  --bm-radius-xl: 16px;
+  --bm-radius-pill: 20px;
+
+  /* Layout */
+  --bm-content-max: 1180px;
+  --bm-form-max: 440px;
+  --bm-header-height: 62px;
+  --bm-page-pad-x: clamp(16px, 4vw, 28px);
+  --bm-tap-min: 44px;
+
+  /* Elevation */
+  --bm-shadow-card: 0 28px 70px rgba(0, 0, 0, 0.45);
+  --bm-shadow-panel: 0 18px 40px rgba(0, 0, 0, 0.35);
+
+  /* Motion and focus */
+  --bm-transition: 140ms ease;
+  --bm-focus-ring: 2px solid var(--bm-action);
+  --bm-focus-offset: 2px;
+}

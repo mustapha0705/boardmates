@@ -4,7 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { useAuth } from "./context/useAuth";
 import { Analytics } from "@vercel/analytics/react";
 import Layout from "./components/Layout.jsx";
-import Feed from "./pages/Feed.jsx";
+import HomeRoute from "./routes/HomeRoute.jsx";
 import SubmitGame from "./pages/SubmitGame.jsx";
 import Profile from "./pages/Profile.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
@@ -70,8 +70,8 @@ function App() {
         <AuthProvider>
           <Analytics />
           <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Feed />} />
+            <Route path="/" element={<HomeRoute />} />
+            <Route element={<Layout />}>
               <Route path="submit" element={<SubmitGame />} />
               <Route path="game-detail/:id" element={<GameDetail />} />
               <Route

@@ -1,6 +1,9 @@
+@import "./styles/tokens.css";
+@import "./styles/primitives.css";
+
 /* Base: reduces bright white flash while auth/session state resolves */
 html {
-  background-color: #0b1220;
+  background-color: var(--bm-page);
 }
 
 html,

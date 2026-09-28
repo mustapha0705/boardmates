@@ -1,28 +1,31 @@
 import { Link } from "react-router-dom";
+import PublicPage from "../components/public/PublicPage.jsx";
+import Button from "../components/ui/Button.jsx";
 import "../styles/not-found.css";
 
 export default function PageNotFound() {
   return (
-    <div className="nf-page">
+    <PublicPage showSectionNav={false}>
       <title>Boardmates | Page Not Found</title>
-      <div className="nf-card">
-        <div className="nf-board">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="1.2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M3 9h18M9 3v18"/>
-          </svg>
-        </div>
-        <h1 className="nf-code">404</h1>
-        <h2 className="nf-title">Page not found</h2>
-        <p className="nf-sub">
-          Looks like this square is off the board. The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="nf-actions">
-          <Link to="/" className="nf-primary-btn">Back to Feed</Link>
-          <Link to="/submit" className="nf-secondary-btn">Submit a Game</Link>
+
+      <div className="bm-shell bm-notfound">
+        <div className="bm-notfound__card">
+          <span className="bm-notfound__code bm-mono">404</span>
+          <h1 className="bm-h1">This square is off the board</h1>
+          <p className="bm-body">
+            The page you asked for doesn&rsquo;t exist or has moved. The published reviews and the submission form are
+            still where you left them.
+          </p>
+          <div className="bm-notfound__actions">
+            <Button as={Link} to="/" variant="primary" size="lg">
+              Back to home
+            </Button>
+            <Button as={Link} to="/submit" variant="secondary" size="lg">
+              Submit a game
+            </Button>
+          </div>
         </div>
       </div>
-      <p className="nf-footer">© 2024 Boardmates · Chess MVP</p>
-    </div>
+    </PublicPage>
   );
 }

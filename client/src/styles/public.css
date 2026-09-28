@@ -1,0 +1,140 @@
+/* Public (signed-out) shell: header, footer and page frame. */
+
+.bm-public {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.bm-public__main {
+  flex: 1;
+}
+
+/* Header */
+.bm-public-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bm-surface-sunken);
+  border-bottom: 1px solid var(--bm-line-subtle);
+}
+.bm-public-header__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--bm-space-9);
+  min-height: var(--bm-header-height);
+  padding-block: var(--bm-space-4);
+}
+.bm-public-header__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--bm-space-9);
+  margin-left: var(--bm-space-3);
+}
+.bm-public-header__nav a {
+  font-size: 13.5px;
+  color: var(--bm-text-secondary);
+  text-decoration: none;
+}
+.bm-public-header__nav a:hover {
+  color: var(--bm-text);
+}
+.bm-public-header__spacer {
+  flex: 1;
+}
+.bm-public-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--bm-space-3);
+}
+
+/* Footer */
+.bm-public-footer {
+  background: var(--bm-surface-sunken);
+  border-top: 1px solid var(--bm-line-subtle);
+  margin-top: var(--bm-space-13);
+}
+.bm-public-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bm-space-11);
+  padding-block: var(--bm-space-10);
+}
+.bm-public-footer__brand {
+  flex: 1;
+  min-width: 210px;
+  display: grid;
+  gap: var(--bm-space-2);
+}
+.bm-public-footer__columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bm-space-11);
+}
+.bm-public-footer__column {
+  display: grid;
+  gap: var(--bm-space-3);
+  align-content: start;
+  font-size: 12.5px;
+}
+.bm-public-footer__column a {
+  color: var(--bm-text-secondary);
+  text-decoration: none;
+}
+.bm-public-footer__column a:hover {
+  color: var(--bm-text);
+  text-decoration: underline;
+}
+.bm-public-footer__legal {
+  padding-bottom: var(--bm-space-9);
+  font-size: var(--bm-size-meta);
+  color: var(--bm-text-muted);
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .bm-public-header__nav {
+    display: none;
+  }
+  .bm-public-header__inner {
+    gap: var(--bm-space-5);
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .bm-public-footer__inner {
+    gap: var(--bm-space-8);
+    padding-block: var(--bm-space-9);
+  }
+  .bm-public-footer__columns {
+    gap: var(--bm-space-9);
+  }
+  /* Keep "Sign in" and "Create account" on a single line on small phones. */
+  .bm-public-header__inner {
+    flex-wrap: nowrap;
+    gap: var(--bm-space-3);
+  }
+  .bm-public-header__actions {
+    flex: none;
+    gap: var(--bm-space-2);
+  }
+  .bm-public-header__actions .bm-btn {
+    padding-inline: var(--bm-space-4);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .bm-brand {
+    gap: var(--bm-space-3);
+  }
+}
+
+@media (max-width: 400px) {
+  .bm-public-header__actions .bm-btn {
+    padding-inline: var(--bm-space-3);
+  }
+  .bm-brand__name {
+    font-size: 15px;
+  }
+}
