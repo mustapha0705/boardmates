@@ -4,6 +4,7 @@
 - Product decisions D1–D14 are recorded in §17.
 - The launch vertical slice and implementation order are in §14.
 - Phase 0 progress is tracked in §14.4: task 0.1 is implemented (commit `20b8322`, not deployed) and task 0.2 is completed. No migrations or dependencies have been added.
+- **Current priority: the recruiter-first UI release (§20).** Phase 0 task 0.3 and the dedicated Supabase test project are paused for the later AI/backend release.
 
 **Scope:** How to integrate the approved Claude Design export into the working Boardmates monorepo without replacing the application that powers myboardmates.com. Delivery is **one AI-assisted production launch**.
 
@@ -16,6 +17,7 @@
 | 1 | 2026-09-12 | Initial draft: current-state inventory, export inventory, matrices, migrations, 14-phase order, tests, risks, open decisions |
 | 2 | 2026-09-12 | **Approved.** See the list below |
 | 3 | 2026-09-13 | Task 0.2 forensic findings and Phase 0 status. See the list below |
+| 4 | 2026-09-27 | Recruiter-first UI release sequence (§20); task 0.3 paused. See the list below |
 
 Revision 2 changes:
 
@@ -34,6 +36,12 @@ Revision 3 changes:
 - Strengthened `useReliableMutation`: bounded timeout, visible recovery state, reconciliation before any retry, and no blind retry after an ambiguous timeout (§12, §15.4, R7).
 - Added slow, dropped and completed-but-response-lost response cases to task 0.3 and Phase 6 QA (§14.2, §14.4, §15.1, §15.6).
 - Corrected the `.gitignore` description: it does not currently ignore `redesign-reference/` (§1, R19, §19).
+
+Revision 4 changes:
+
+- Added the recruiter-first UI release sequence, its rules and UI-1 delivery notes (§20).
+- Paused Phase 0 task 0.3 and the dedicated Supabase test project; tasks 0.4–0.7 defer with it (§14.4).
+- Recorded that §14 stays the plan of record for the AI-assisted launch, with delivery re-ordered by §20 (§14).
 
 ## Contents
 
@@ -56,6 +64,7 @@ Revision 3 changes:
 17. [Decision record and clarifications](#17-decision-record-and-clarifications)
 18. [Approved deviations from the export](#18-approved-deviations-from-the-export)
 19. [Preserving the redesign reference](#19-preserving-the-redesign-reference)
+20. [Recruiter-first UI release](#20-recruiter-first-ui-release)
 
 ---
 
@@ -1221,6 +1230,8 @@ Explicitly **not** proposed:
 
 ## 14. Launch vertical slice and implementation order
 
+> **Current sequencing:** the recruiter-first UI release in §20 ships first. This section stays the plan of record for the AI-assisted launch; its Phases 3–5 and the Phase 0 items that depend on the integration harness are deferred to §20 UI-6. Nothing here is deleted.
+
 Phase numbers map to the approved sequence:
 
 | Approved step | Phase |
@@ -1308,7 +1319,9 @@ Phase numbers map to the approved sequence:
 | --- | --- |
 | 0.1 | Implemented in commit `20b8322`; not pushed or deployed; database-backed verification pending in 0.3 |
 | 0.2 | **Completed — historical cause unconfirmed; failure mode and mitigation documented** (§14.7) |
-| 0.3–0.12 | Not started |
+| 0.3 | **Paused** for the recruiter-first release (§20); resumes with UI-6 together with the dedicated Supabase test project |
+| 0.4–0.7 | Deferred with 0.3, which they depend on |
+| 0.8–0.12 | Not started |
 
 ### 14.5 Cutover checklist (Phase 7)
 
@@ -1703,4 +1716,40 @@ Implementation follows this table wherever the export differs. Line numbers refe
 
 ---
 
-*End of map (revision 3).*
+## 20. Recruiter-first UI release
+
+**Priority set 2026-09-27.** myboardmates.com should show the approved Claude Design redesign while continuing to run on the existing backend, Supabase authentication, database and chess-review functionality. Stockfish and LLM assistance remain the product direction but are no longer required before the redesigned UI launches. The export in `redesign-reference/` remains the visual source of truth, and capture distortions in screenshots are artefacts rather than design defects.
+
+### 20.1 Sequence
+
+| Slice | Scope | Status |
+| --- | --- | --- |
+| UI-1 | UI foundations and public entry: design tokens, the minimum primitives, responsive public header and footer, the signed-out landing page at `/`, and redesigned `/login`, `/signup`, `/forgot-password`, `/reset-password` and 404 | Implemented on `boardmates-redesign-integration` |
+| UI-2 | Signed-in shell and Home | Not started |
+| UI-3 | Submit Game, My Games, Profile and game detail | Not started |
+| UI-4 | Reviewer workspace and completed review | Not started |
+| UI-5 | Responsive QA, preview deployment and production cutover | Not started |
+| UI-6 | Deferred AI/backend release: Phase 0 task 0.3 and the Supabase test project, then §14 Phases 3–5 (Stockfish analysis, LLM drafts, required summary, notifications) | Paused |
+
+### 20.2 Rules for this release
+
+- The existing backend and Supabase are the source of truth. No changes to the server, Prisma schema, migrations, API contracts or production data, and no new Supabase project.
+- No mock numbers, fake reviews, contribution points, badges or notification counts. Public content comes only from existing public endpoints.
+- No functional AI-analysis, AI-draft or critical-moment controls. Where the UI mentions AI it is labelled as planned and not yet active.
+- Unsupported controls stay hidden: Google sign-in, connected-account imports and "keep me signed in".
+- The export is rebuilt as React and CSS inside `client/`; `support.js` is never imported or bundled.
+- Existing routes are preserved and working authentication logic is not rewritten to match prototype mocks.
+- D1 (+300 rating gap) and D3 (publication gate v2) still require server changes, so copy in this release states neither a specific rating gap nor a publication rule the deployed server does not enforce.
+
+### 20.3 UI-1 delivery notes
+
+- Tokens (`client/src/styles/tokens.css`) and primitives (`primitives.css`) carry the export's colour, type, spacing, radius, elevation and motion values, dark-only, under `bm-*` names so legacy signed-in stylesheets are untouched.
+- Primitives built for this slice only: button, text/password/select fields, card, status pill, callout, segmented link control, brand mark and a static decorative board.
+- `/` keeps its URL: signed-out visitors get the landing page, signed-in users get the existing feed in the app shell.
+- Landing content is real: recently published reviews and one published note come from `GET /api/games?status=completed` and `GET /api/games/:id`. Empty and error states are honest, with no placeholder cards.
+- Footer links are limited to destinations that exist; Terms, Privacy and community pages remain outstanding (K8).
+- The decorative landing board uses the export's Unicode glyph treatment. Self-hosted piece images (D12, §18) land with the interactive board work in UI-4.
+
+---
+
+*End of map (revision 4).*
