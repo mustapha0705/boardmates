@@ -19,6 +19,7 @@
 | 3 | 2026-09-13 | Task 0.2 forensic findings and Phase 0 status. See the list below |
 | 4 | 2026-09-27 | Recruiter-first UI release sequence (§20); task 0.3 paused. See the list below |
 | 5 | 2026-09-29 | UI-2 delivered (§20.4). See the list below |
+| 6 | 2026-09-29 | UI-3 delivered (§20.5); D4 recorded as a pre-deployment blocker. See the list below |
 
 Revision 2 changes:
 
@@ -48,6 +49,12 @@ Revision 5 changes:
 
 - Marked UI-2 complete and recorded its commit (§20.1, §20.4).
 - Added UI-2 delivery notes: shell, responsive navigation, Home dashboard, preserved contracts, export differences, checks and deferred work.
+
+Revision 6 changes:
+
+- Marked UI-3 complete and recorded its commit (§20.1, §20.5).
+- Added UI-3 delivery notes: Submit, Game detail, Profile, the new My Games route, preserved contracts, the post-submission redirect, responsive verification, removed legacy files and remaining UI-4 work.
+- Recorded pre-publication exposure of review content through the API (R4, D4) as a blocker for production deployment of the redesign (§20.5).
 
 ## Contents
 
@@ -1732,7 +1739,7 @@ Implementation follows this table wherever the export differs. Line numbers refe
 | --- | --- | --- |
 | UI-1 | UI foundations and public entry: design tokens, the minimum primitives, responsive public header and footer, the signed-out landing page at `/`, and redesigned `/login`, `/signup`, `/forgot-password`, `/reset-password` and 404 | **Delivered** — `d702657` (client), `869e7ec` (map) |
 | UI-2 | Signed-in shell and Home dashboard | **Delivered** — `824626f` (§20.4) |
-| UI-3 | Submit Game, My Games, Profile and game detail | Not started |
+| UI-3 | Submit Game, My Games, Profile and game detail | **Delivered** — `38e8943` (§20.5) |
 | UI-4 | Reviewer workspace and completed review | Not started |
 | UI-5 | Responsive QA, preview deployment and production cutover | Not started |
 | UI-6 | Deferred AI/backend release: Phase 0 task 0.3 and the Supabase test project, then §14 Phases 3–5 (Stockfish analysis, LLM drafts, required summary, notifications) | Paused |
@@ -1768,6 +1775,40 @@ Commit `824626f` (client only; 20 files). Build, scoped lint and render checks p
 - **Checks.** Production build succeeded; lint of the UI-1 and UI-2 files exited 0, with only the four pre-existing errors elsewhere; server-side render of the shell with Home, Profile and Submit produced exactly one `main` and one `h1` per page with no fake figures; a static audit confirmed every `bm-` class resolves and the 900/640/400 px breakpoints are coherent. Browser, screen-reader and axe passes remain for UI-5.
 - **Deferred to UI-3.** Redesign of Submit Game, Profile, My Games and game detail; adding My Games to the navigation; removing the transitional shim in `app-shell.css` that stops legacy pages double-padding or repainting inside the shell; deleting the now-unused `Feed.jsx`, `GameCard.jsx`, `Sidebar.jsx` and `Topbar.jsx` (with `feed.css` no longer bundled); adopting the shared eligibility helper in `GameDetail`. Sidebar collapse still resets on refresh, matching the previous shell.
 
+### 20.5 UI-3 delivery notes
+
+Commit `38e8943` (client only; 39 files under `client/src`). Build, scoped lint, render and responsive checks passed before commit.
+
+- **Submit Game** (`/submit`, same URL and guard). The export's four-step flow: import (upload a `.pgn` or paste text), confirm details, question/title/visibility, and review-and-submit. A client-only adapter (`adapters/pgnMetadata.js`) reads the PGN headers to show players, ratings, result, clock, opening, length, date and a final-position board, and pre-fills colour, result, time-control category and average rating where the file allows. Pre-filled values are only suggestions the submitter confirms, and they never overwrite choices already made. Link and account import, focus chips and the duplicate warning stay hidden. Private copy states only what the deployed server does: "Not shown in public lists while it waits for a review. Anyone with the link can open it and claim it."
+- **Game detail** (`/game-detail/:id`). Role-aware header with status pill (Waiting for a reviewer / Being reviewed by *name* / Human reviewed, plus Private), derived match line, and role actions:
+  - signed-out visitors see Sign in and Create account;
+  - eligible reviewers see "Review this game", which opens the shared claim dialog (`components/app/ClaimDialog.jsx`, also used by Home);
+  - ineligible reviewers see a disabled button with the reason;
+  - the assigned reviewer sees "Continue review";
+  - owners and readers of completed reviews can copy the link.
+  Eligibility tiles show the rating requirement, the viewer's rating and "At least 3 move notes". The existing board, move list and notes list are kept. Their legacy colour variables are remapped to tokens inside `.bm-detail`, so the reviewer workspace is untouched. Completed games with no notes get the legacy fallback copy without an action. A claim failure refreshes the game so a conflict shows the current reviewer.
+- **Profile** (`/profile`). Header with avatar, "Verified chess profile" (a verified chess username plus a rapid rating; identity only, not a quality endorsement, D6), platform and member-since line and rapid rating. Three stat tiles from `/profile/stats`. Accessible tabs (Reviews given, In progress, Submitted) page through the existing cursors behind "Show more", replacing infinite scroll.
+- **My Games** (`/my-games`, **new**, `RequireAuth`). Added to the sidebar and mobile bottom navigation, so signed-in navigation is now Home, Submit Game, My Games and Profile (§18). It lists `/profile/games` with filter chips All, Waiting, In review, Reviewed and Private. The endpoint has no status filter, so the filters apply to the games loaded so far and the page says so. "Show more" continues the cursor. It shares the `["profile", "games"]` cache with the Profile Submitted tab. Search and an Analyzing filter remain deferred.
+- **Shell.** Signed-out visitors on the public Submit and game pages now see only Home and Submit Game, plus Sign in and Create account, instead of an empty account block and Sign out. Two UI-2 fixes: `Dialog` no longer moves focus to its first control when the parent re-renders, and the sidebar shows name and rating on separate lines.
+- **Preserved contracts and behaviour.** Only existing endpoints are used, with unchanged request and response shapes:
+  - `POST /games`, still sending the same fields, time-control presets and validation messages;
+  - `GET /games/:id` and `POST /games/:id/claim`;
+  - `/profile/stats`, `/profile/games` and `/profile/reviews`.
+  Eligibility still mirrors the deployed **+200** rapid rule through `utils/reviewEligibility.js`, now also used by Game detail. Private games are exempt, as on the server. Copy states no 300-point gap and no summary requirement (§20.2). No route, auth, server, schema, migration, contract or dependency changes.
+- **Post-submission redirect.** On success Submit now navigates to the created game's detail page with a "Game submitted" confirmation, instead of `/` (§10). It invalidates `["games"]`, `["profile"]` and `["home"]`. The confirmation comes from router history state, so it reappears on a same-tab reload of that page.
+- **Removed legacy frontend files** (repository search confirmed no remaining imports): `pages/Feed.jsx`, `components/GameCard.jsx`, `components/Sidebar.jsx`, `components/Topbar.jsx`, `components/AuthPromptActions.jsx`, `constants/gameStatus.js`, `styles/feed.css`, `styles/auth-prompt.css` and `styles/submit-game.css`. Two declarations the workspace had been inheriting from the global rules in `submit-game.css` (`.card` overflow and margin; textarea minimum height) were copied into `game-review.css`. The transitional shim in `app-shell.css` now covers only the reviewer workspace.
+- **Checks.**
+  - Production build succeeded. Lint of every touched file exited 0; the four pre-existing errors elsewhere are unchanged.
+  - A local render harness (mocked auth, seeded query cache, API pointed at a dead local port) ran 27 scenarios in headless Chrome at 390 px (true viewport, via an iframe), 820 px and 1280 px. The scenarios covered each Submit step, including invalid PGN and signed-out; every game-detail role; and Profile and My Games in normal and empty states.
+  - Every UI-3 page had exactly one `main` and one `h1`, no horizontal page overflow, and none of the forbidden strings (fake counts, AI, notifications, "300").
+  - Scenario-specific assertions passed, including that in-progress notes are absent from the game page.
+  - Real-device, screen-reader and axe passes remain for UI-5.
+- **Remaining UI-4 work.**
+  - Reviewer workspace mobile overflow: the chessboard.js board overflows at 390 px. This predates UI-3; the same check fails at `f9854d5`, where the old game detail also overflowed. UI-3 fixes game detail.
+  - Self-hosted chess pieces (D12, C53): the board still hot-links piece images from `chessboardjs.com`.
+  - The remaining workspace and completed-review redesign per §20.1.
+- **Pre-deployment security blocker: unpublished review content is exposed by the API (R4, D4).** Before publication, Game detail now shows only the submitted moves, not the reviewer's in-progress notes or analysis tree. That is presentation only. **Frontend hiding is not access control.** `GET /api/games/:id` and `GET /api/games/:id/comments` still return in-progress comments and `analysisTree` to anyone with the game id, without authentication. The server must enforce D4 (role-aware serialization, C49; §7.4 visibility model) before the redesigned frontend reaches production. This blocker stands regardless of UI progress and must be cleared before the UI-5 cutover.
+
 ---
 
-*End of map (revision 5).*
+*End of map (revision 6).*
