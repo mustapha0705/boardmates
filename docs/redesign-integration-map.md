@@ -18,6 +18,7 @@
 | 2 | 2026-09-12 | **Approved.** See the list below |
 | 3 | 2026-09-13 | Task 0.2 forensic findings and Phase 0 status. See the list below |
 | 4 | 2026-09-27 | Recruiter-first UI release sequence (§20); task 0.3 paused. See the list below |
+| 5 | 2026-09-29 | UI-2 delivered (§20.4). See the list below |
 
 Revision 2 changes:
 
@@ -42,6 +43,11 @@ Revision 4 changes:
 - Added the recruiter-first UI release sequence, its rules and UI-1 delivery notes (§20).
 - Paused Phase 0 task 0.3 and the dedicated Supabase test project; tasks 0.4–0.7 defer with it (§14.4).
 - Recorded that §14 stays the plan of record for the AI-assisted launch, with delivery re-ordered by §20 (§14).
+
+Revision 5 changes:
+
+- Marked UI-2 complete and recorded its commit (§20.1, §20.4).
+- Added UI-2 delivery notes: shell, responsive navigation, Home dashboard, preserved contracts, export differences, checks and deferred work.
 
 ## Contents
 
@@ -1724,8 +1730,8 @@ Implementation follows this table wherever the export differs. Line numbers refe
 
 | Slice | Scope | Status |
 | --- | --- | --- |
-| UI-1 | UI foundations and public entry: design tokens, the minimum primitives, responsive public header and footer, the signed-out landing page at `/`, and redesigned `/login`, `/signup`, `/forgot-password`, `/reset-password` and 404 | Implemented on `boardmates-redesign-integration` |
-| UI-2 | Signed-in shell and Home | Not started |
+| UI-1 | UI foundations and public entry: design tokens, the minimum primitives, responsive public header and footer, the signed-out landing page at `/`, and redesigned `/login`, `/signup`, `/forgot-password`, `/reset-password` and 404 | **Delivered** — `d702657` (client), `869e7ec` (map) |
+| UI-2 | Signed-in shell and Home dashboard | **Delivered** — `824626f` (§20.4) |
 | UI-3 | Submit Game, My Games, Profile and game detail | Not started |
 | UI-4 | Reviewer workspace and completed review | Not started |
 | UI-5 | Responsive QA, preview deployment and production cutover | Not started |
@@ -1750,6 +1756,18 @@ Implementation follows this table wherever the export differs. Line numbers refe
 - Footer links are limited to destinations that exist; Terms, Privacy and community pages remain outstanding (K8).
 - The decorative landing board uses the export's Unicode glyph treatment. Self-hosted piece images (D12, §18) land with the interactive board work in UI-4.
 
+### 20.4 UI-2 delivery notes
+
+Commit `824626f` (client only; 20 files). Build, scoped lint and render checks passed before commit.
+
+- **Signed-in shell.** `Layout` now composes `AppSidebar`, `AppHeader` and `MobileTabBar` from `components/app/`, using the UI-1 tokens and primitives. The sidebar is 244 px expanded and an 82 px rail when collapsed (both from tokens); the collapsed rail hides brand, avatar, username and rating, centres the toggle, the nav icons and a single sign-out icon, and keeps labels through `aria-label`, hidden text and tooltips. The shell owns the single `main` landmark and the skip link, so the four legacy pages' outer `<main>` wrappers became `<div>` (class-based styling unaffected).
+- **Responsive navigation.** Above 900 px: sidebar plus page header, header sign-out hidden because the sidebar has it. At 900 px and below: sidebar hidden, bottom tab bar with Submit as the centre action, header sign-out visible. Content clears the fixed bar. Grids collapse at 640 px; the public header tightens at 400 px.
+- **Home dashboard** (signed-in `/`, same URL): greeting, three stat tiles from `/profile/stats`, "Games waiting for a reviewer" with a claim dialog, "Your games", and "Recently reviewed", each paginating through existing cursors behind "Show more". Failed sections degrade to quiet neutral states with `console.error` diagnostics.
+- **Preserved contracts and behaviour.** Only existing endpoints are used: `/profile/stats`, `/profile/games`, `GET /games?status=pending|completed` and `POST /games/:id/claim`. Claim still navigates to the reviewer workspace and invalidates the same caches; eligibility mirrors the deployed +200 rapid rule with the existing messages, and the server stays authoritative. No route, API, auth, schema, migration or dependency changes.
+- **Deliberate differences from the export.** Navigation has three destinations until My Games ships in UI-3; no review-ready banner or notification bell (needs M08, UI-6); three stat tiles instead of four, since "Reviews received" and contribution points have no backend; no header search; no critical-moment counts.
+- **Checks.** Production build succeeded; lint of the UI-1 and UI-2 files exited 0, with only the four pre-existing errors elsewhere; server-side render of the shell with Home, Profile and Submit produced exactly one `main` and one `h1` per page with no fake figures; a static audit confirmed every `bm-` class resolves and the 900/640/400 px breakpoints are coherent. Browser, screen-reader and axe passes remain for UI-5.
+- **Deferred to UI-3.** Redesign of Submit Game, Profile, My Games and game detail; adding My Games to the navigation; removing the transitional shim in `app-shell.css` that stops legacy pages double-padding or repainting inside the shell; deleting the now-unused `Feed.jsx`, `GameCard.jsx`, `Sidebar.jsx` and `Topbar.jsx` (with `feed.css` no longer bundled); adopting the shared eligibility helper in `GameDetail`. Sidebar collapse still resets on refresh, matching the previous shell.
+
 ---
 
-*End of map (revision 4).*
+*End of map (revision 5).*
