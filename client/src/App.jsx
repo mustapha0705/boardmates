@@ -7,6 +7,7 @@ import Layout from "./components/Layout.jsx";
 import HomeRoute from "./routes/HomeRoute.jsx";
 import SubmitGame from "./pages/SubmitGame.jsx";
 import Profile from "./pages/Profile.jsx";
+import MyGames from "./pages/MyGames.jsx";
 import PageNotFound from "./pages/PageNotFound.jsx";
 import ReviewGame from "./pages/ReviewGame.jsx";
 import GameDetail from "./pages/GameDetail.jsx";
@@ -74,6 +75,14 @@ function App() {
             <Route element={<Layout />}>
               <Route path="submit" element={<SubmitGame />} />
               <Route path="game-detail/:id" element={<GameDetail />} />
+              <Route
+                path="my-games"
+                element={
+                  <RequireAuth>
+                    <MyGames />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="profile"
                 element={

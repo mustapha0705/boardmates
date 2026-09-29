@@ -1,13 +1,15 @@
 import { createElement } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/useAuth";
 import { PlusIcon } from "./NavIcons.jsx";
-import { NAV_ITEMS, isActivePath } from "./navItems.js";
+import { isActivePath, navItemsFor } from "./navItems.js";
 
 /** Mobile bottom navigation with Submit as the centre action, per the export. */
 export default function MobileTabBar() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
-  const items = NAV_ITEMS.map((item) =>
+  const items = navItemsFor(isAuthenticated).map((item) =>
     item.to === "/submit" ? { ...item, Icon: PlusIcon, primary: true, label: "Submit" } : item,
   );
 

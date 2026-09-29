@@ -3,11 +3,18 @@
  * a reviewer's verified rapid rating must be at least REVIEW_RATING_GAP above the game's
  * average rating. The server remains authoritative; this only decides what the UI offers.
  *
+ * Private games skip the rating rule on the server (any signed-in non-author may claim
+ * them by link), so `isPrivate` skips it here too.
+ *
  * Messages match the existing feed copy so behaviour is unchanged.
  */
 export const REVIEW_RATING_GAP = 200;
 
-export function getReviewEligibility({ viewerRapidRating, gameAverageRating }) {
+export function getReviewEligibility({ viewerRapidRating, gameAverageRating, isPrivate = false }) {
+  if (isPrivate) {
+    return { canReview: true, message: "", minRequired: null };
+  }
+
   const viewerRating = Number(viewerRapidRating);
   const gameRating = Number(gameAverageRating);
   const hasViewerRating = Number.isFinite(viewerRating) && viewerRating > 0;

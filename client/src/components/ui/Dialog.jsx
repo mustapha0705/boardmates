@@ -10,7 +10,14 @@ const FOCUSABLE =
  */
 export default function Dialog({ title, lead, onClose, children }) {
   const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
   const titleId = useId();
+
+  // Callers usually pass an inline handler; reading it through a ref keeps the effect
+  // below mount-only, so a parent re-render never moves focus back to the first control.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement;
@@ -24,7 +31,7 @@ export default function Dialog({ title, lead, onClose, children }) {
     function handleKeyDown(event) {
       if (event.key === "Escape") {
         event.stopPropagation();
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
       if (event.key !== "Tab") return;
@@ -51,13 +58,13 @@ export default function Dialog({ title, lead, onClose, children }) {
         previouslyFocused.focus();
       }
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div
       className="bm-dialog-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose?.();
+        if (event.target === event.currentTarget) onCloseRef.current?.();
       }}
     >
       <div className="bm-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={dialogRef} tabIndex={-1}>

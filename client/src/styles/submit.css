@@ -1,0 +1,370 @@
+/* Submit game, from the approved export's four-step "Submit game" screen. */
+
+.bm-submit {
+  display: grid;
+  gap: var(--bm-space-9);
+  max-width: 960px;
+}
+
+/* Stepper */
+.bm-stepper-wrap {
+  display: grid;
+  gap: var(--bm-space-4);
+}
+.bm-stepper__caption {
+  display: none;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--bm-text-secondary);
+}
+.bm-stepper {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bm-stepper__item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.bm-stepper__item:last-child {
+  flex: none;
+}
+.bm-stepper__item:not(:last-child)::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  margin: 0 12px;
+  background: var(--bm-line);
+}
+.bm-stepper__item.is-done:not(:last-child)::after {
+  background: var(--bm-approved-border);
+}
+.bm-stepper__button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+}
+button.bm-stepper__button {
+  cursor: pointer;
+}
+.bm-stepper__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--bm-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  /* Text-secondary rather than muted: muted fails AA on this surface (map §8.2). */
+  background: var(--bm-surface-selected);
+  color: var(--bm-text-secondary);
+}
+.bm-stepper__label {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--bm-text-muted);
+}
+.is-current .bm-stepper__mark {
+  background: var(--bm-action);
+  color: var(--bm-on-action);
+}
+.is-current .bm-stepper__label {
+  color: var(--bm-text);
+}
+.is-done .bm-stepper__mark {
+  background: var(--bm-approved-tint);
+  color: var(--bm-approved);
+}
+.is-done .bm-stepper__label {
+  color: var(--bm-text-secondary);
+}
+button.bm-stepper__button:hover .bm-stepper__label {
+  color: var(--bm-text);
+}
+
+/* Steps */
+.bm-submit__step {
+  display: grid;
+  gap: var(--bm-space-8);
+  animation: bm-rise 200ms ease;
+}
+.bm-submit__step--narrow {
+  max-width: 660px;
+}
+.bm-submit__intro {
+  display: grid;
+  gap: var(--bm-space-2);
+}
+.bm-submit__intro .bm-h1:focus {
+  outline: none;
+}
+.bm-submit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bm-space-4);
+}
+.bm-submit__submit {
+  flex: 1;
+}
+
+/* Step 1: import */
+.bm-submit__import {
+  display: grid;
+  gap: var(--bm-space-6);
+  padding: var(--bm-space-7);
+  border: 1px dashed var(--bm-line);
+  border-radius: var(--bm-radius-xl);
+  transition: border-color var(--bm-transition), background var(--bm-transition);
+}
+.bm-submit__import.is-dragging {
+  border-color: var(--bm-action);
+  background: var(--bm-action-tint);
+}
+.bm-submit__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--bm-space-5);
+}
+.bm-submit__option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--bm-space-5);
+  row-gap: 4px;
+  align-items: center;
+  padding: var(--bm-space-7);
+  border: 1px solid var(--bm-line);
+  border-radius: 12px;
+  background: var(--bm-surface);
+  font-family: inherit;
+  text-align: left;
+  color: var(--bm-text);
+  cursor: pointer;
+  transition: background var(--bm-transition), border-color var(--bm-transition);
+}
+.bm-submit__option:hover {
+  border-color: var(--bm-line-strong);
+}
+.bm-submit__option.is-selected {
+  background: var(--bm-surface-elevated);
+  border-color: var(--bm-action);
+}
+.bm-submit__option-icon {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bm-action-tint);
+  color: var(--bm-action);
+}
+.bm-submit__option-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.bm-submit__option-hint {
+  font-size: 12px;
+  color: var(--bm-text-secondary);
+}
+.bm-submit__drop {
+  display: grid;
+  justify-items: center;
+  gap: var(--bm-space-5);
+  padding: var(--bm-space-9) var(--bm-space-7);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.bm-textarea.bm-submit__pgn {
+  min-height: 180px;
+  font-family: var(--bm-font-mono);
+  font-size: 12.5px;
+}
+.bm-submit__read {
+  display: flex;
+  align-items: center;
+  gap: var(--bm-space-4);
+  padding: 12px 15px;
+  border: 1px solid var(--bm-approved-border);
+  border-radius: 11px;
+  background: var(--bm-approved-tint);
+  font-size: 12.5px;
+  color: var(--bm-text-secondary);
+  overflow-wrap: anywhere;
+}
+.bm-submit__read-icon {
+  display: flex;
+  flex: none;
+  color: var(--bm-approved);
+}
+
+/* Step 2: confirm */
+.bm-submit__confirm {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+  gap: var(--bm-space-8);
+  align-items: start;
+}
+.bm-card.bm-submit__board {
+  padding: var(--bm-space-6);
+}
+.bm-submit__board-caption {
+  margin-top: var(--bm-space-4);
+  text-align: center;
+}
+.bm-submit__details {
+  display: grid;
+  gap: var(--bm-space-6);
+  min-width: 0;
+}
+.bm-card.bm-submit__facts-card {
+  padding: 14px 16px;
+}
+.bm-submit__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  margin: 0;
+}
+.bm-submit__fact dt {
+  font-size: 11px;
+  color: var(--bm-text-muted);
+}
+.bm-submit__fact dd {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.bm-submit__fact-aside {
+  font-family: var(--bm-font-mono);
+  font-weight: 500;
+  color: var(--bm-text-secondary);
+}
+.bm-submit__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--bm-space-6);
+}
+
+/* Step 3: question and visibility */
+.bm-submit__visibility {
+  display: grid;
+  margin: 0;
+  padding: 6px 16px;
+  border: 1px solid var(--bm-line);
+  border-radius: 12px;
+}
+.bm-submit__visibility legend {
+  padding: 0 6px;
+}
+.bm-submit__radio {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.bm-submit__radio + .bm-submit__radio {
+  border-top: 1px solid var(--bm-line-subtle);
+}
+.bm-submit__radio input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--bm-action);
+}
+.bm-submit__radio-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.bm-submit__radio-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--bm-text-secondary);
+}
+
+/* Step 4: summary */
+.bm-submit__summary {
+  display: grid;
+  gap: var(--bm-space-2);
+}
+.bm-submit__summary .bm-h3 {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.bm-submit__summary-question {
+  display: grid;
+  gap: var(--bm-space-2);
+  margin-top: var(--bm-space-5);
+  padding-top: var(--bm-space-6);
+  border-top: 1px solid var(--bm-line-subtle);
+}
+.bm-submit__summary-question .bm-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bm-submit__guest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bm-space-4);
+}
+
+@media (max-width: 900px) {
+  .bm-submit__confirm {
+    grid-template-columns: 1fr;
+  }
+  .bm-submit__board {
+    max-width: 380px;
+    width: 100%;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .bm-submit {
+    gap: var(--bm-space-8);
+  }
+  /* Labels move into the caption; the marks still show progress. */
+  .bm-stepper__caption {
+    display: block;
+  }
+  .bm-stepper__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .bm-stepper__item:not(:last-child)::after {
+    margin: 0 8px;
+  }
+  .bm-submit__facts,
+  .bm-submit__fields {
+    grid-template-columns: 1fr;
+  }
+  .bm-submit__actions .bm-btn {
+    flex: 1 1 auto;
+  }
+}

@@ -6,9 +6,12 @@ import { claimReview, fetchGames, fetchProfileGames, fetchProfileStats } from ".
 import Button from "../components/ui/Button.jsx";
 import Callout from "../components/ui/Callout.jsx";
 import Card from "../components/ui/Card.jsx";
-import Dialog from "../components/ui/Dialog.jsx";
+import ShowMore from "../components/ui/ShowMore.jsx";
 import StatTile from "../components/ui/StatTile.jsx";
 import StatusPill from "../components/ui/StatusPill.jsx";
+import ClaimDialog from "../components/app/ClaimDialog.jsx";
+import GameRow from "../components/app/GameRow.jsx";
+import { metaLine } from "../utils/metaLine";
 import { getReviewEligibility } from "../utils/reviewEligibility";
 import { timeAgo } from "../utils/time";
 import "../styles/home.css";
@@ -29,26 +32,13 @@ function isOwnGame(game, viewerId) {
   return game.authorId === viewerId || game.author?.id === viewerId;
 }
 
-function ShowMore({ query, label }) {
-  if (!query.hasNextPage) return null;
-  return (
-    <div className="bm-home__more">
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => query.fetchNextPage()}
-        loading={query.isFetchingNextPage}
-        disabled={query.isFetchingNextPage}
-      >
-        {query.isFetchingNextPage ? "Loading…" : label}
-      </Button>
-    </div>
-  );
-}
-
 function QueueCard({ game, viewerId, viewerRating, onClaim }) {
   const own = isOwnGame(game, viewerId);
-  const eligibility = getReviewEligibility({ viewerRapidRating: viewerRating, gameAverageRating: game.averageRating });
+  const eligibility = getReviewEligibility({
+    viewerRapidRating: viewerRating,
+    gameAverageRating: game.averageRating,
+    isPrivate: game.isPrivate,
+  });
   const question = String(game.reviewNotes ?? "").trim();
 
   return (
@@ -93,49 +83,33 @@ function QueueCard({ game, viewerId, viewerRating, onClaim }) {
 }
 
 function MyGameRow({ game }) {
-  const action = game.status === "completed" ? "Read review" : "View game";
-
   return (
-    <Card className="bm-row">
-      <StatusPill status={game.status} />
-      <span className="bm-row__main">
-        <span className="bm-row__title">{game.title}</span>
-        <span className="bm-row__meta">
-          {game.timeControl}
-          {game.averageRating ? ` · avg ${game.averageRating}` : ""}
-          {` · ${timeAgo(game.submittedAt)}`}
-        </span>
-      </span>
-      {game.isPrivate ? <StatusPill status="private" /> : null}
-      {game.reviewer?.displayName ? (
-        <span className="bm-row__aside">Reviewer {game.reviewer.displayName}</span>
-      ) : null}
-      <Button as={Link} to={`/game-detail/${game.id}`} variant="secondary" size="sm">
-        {action}
-      </Button>
-    </Card>
+    <GameRow
+      status={game.status}
+      title={game.title}
+      meta={metaLine(game.timeControl, game.averageRating ? `avg ${game.averageRating}` : null, timeAgo(game.submittedAt))}
+      isPrivate={game.isPrivate}
+      aside={game.reviewer?.displayName ? `Reviewer ${game.reviewer.displayName}` : null}
+      to={`/game-detail/${game.id}`}
+      actionLabel={game.status === "completed" ? "Read review" : "View game"}
+    />
   );
 }
 
 function RecentRow({ game }) {
   return (
-    <Card className="bm-row">
-      <StatusPill status="completed" />
-      <span className="bm-row__main">
-        <span className="bm-row__title">{game.title}</span>
-        <span className="bm-row__meta">
-          {game.timeControl}
-          {game.averageRating ? ` · avg ${game.averageRating}` : ""}
-          {game.completedAt ? ` · ${timeAgo(game.completedAt)}` : ""}
-        </span>
-      </span>
-      {game.reviewer?.displayName ? (
-        <span className="bm-row__aside">Reviewed by {game.reviewer.displayName}</span>
-      ) : null}
-      <Button as={Link} to={`/game-detail/${game.id}`} variant="secondary" size="sm">
-        Read review
-      </Button>
-    </Card>
+    <GameRow
+      status="completed"
+      title={game.title}
+      meta={metaLine(
+        game.timeControl,
+        game.averageRating ? `avg ${game.averageRating}` : null,
+        game.completedAt ? timeAgo(game.completedAt) : null,
+      )}
+      aside={game.reviewer?.displayName ? `Reviewed by ${game.reviewer.displayName}` : null}
+      to={`/game-detail/${game.id}`}
+      actionLabel="Read review"
+    />
   );
 }
 
@@ -211,7 +185,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="bm-home__stats">
+      <div className="bm-stats">
         <StatTile label="Games submitted" value={stats.data?.submitted} />
         <StatTile label="Reviews you published" value={stats.data?.reviewed} tone="accent" />
         <StatTile label="Reviews in progress" value={stats.data?.inProgress} tone="action" />
@@ -265,7 +239,7 @@ export default function Home() {
           <h2 className="bm-h2" id="home-my-games">
             Your games
           </h2>
-          <Link to="/profile" className="bm-link bm-home__section-note">
+          <Link to="/my-games" className="bm-link bm-home__section-note">
             All submissions
           </Link>
         </div>
@@ -318,56 +292,13 @@ export default function Home() {
       </section>
 
       {claimTarget ? (
-        <Dialog
-          title="Claim this review?"
-          lead="Claiming locks the game to you. No one else can review it until you publish."
+        <ClaimDialog
+          game={claimTarget}
+          viewerRating={viewerRating}
+          pending={claimMutation.isPending}
+          onConfirm={() => claimMutation.mutate(claimTarget.id)}
           onClose={() => setClaimTarget(null)}
-        >
-          <dl className="bm-dialog__panel">
-            <div className="bm-dialog__row">
-              <dt>Game</dt>
-              <dd>{claimTarget.title}</dd>
-            </div>
-            <div className="bm-dialog__row">
-              <dt>Submitted by</dt>
-              <dd>{claimTarget.author?.displayName ?? "Unknown"}</dd>
-            </div>
-            <div className="bm-dialog__row">
-              <dt>Time control</dt>
-              <dd className="bm-mono">{claimTarget.timeControl}</dd>
-            </div>
-            {claimTarget.averageRating ? (
-              <div className="bm-dialog__row">
-                <dt>Average rating</dt>
-                <dd className="bm-mono">{claimTarget.averageRating}</dd>
-              </div>
-            ) : null}
-            {Number.isFinite(viewerRating) && viewerRating > 0 ? (
-              <div className="bm-dialog__row">
-                <dt>Your rating</dt>
-                <dd className="bm-mono">{viewerRating} rapid</dd>
-              </div>
-            ) : null}
-            <div className="bm-dialog__row">
-              <dt>To publish</dt>
-              <dd>At least 3 move notes</dd>
-            </div>
-          </dl>
-
-          <div className="bm-dialog__actions">
-            <Button variant="secondary" onClick={() => setClaimTarget(null)} disabled={claimMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => claimMutation.mutate(claimTarget.id)}
-              loading={claimMutation.isPending}
-              disabled={claimMutation.isPending}
-            >
-              {claimMutation.isPending ? "Claiming…" : "Claim and start review"}
-            </Button>
-          </div>
-        </Dialog>
+        />
       ) : null}
     </div>
   );

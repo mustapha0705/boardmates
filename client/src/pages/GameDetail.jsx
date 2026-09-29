@@ -1,99 +1,132 @@
-import { useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Chess } from "chess.js";
 import { claimReview, fetchGame } from "../services/api";
 import { getMoveLabel } from "../hooks/useAnalysisTree";
 import useKeyboardNav from "../hooks/useKeyboardNav";
 import ChessBoard from "../components/ChessBoard.jsx";
 import MoveList from "../components/MoveList.jsx";
 import CommentList from "../components/CommentList.jsx";
+import ClaimDialog from "../components/app/ClaimDialog.jsx";
+import Button from "../components/ui/Button.jsx";
+import Callout from "../components/ui/Callout.jsx";
+import Card from "../components/ui/Card.jsx";
+import StatusPill from "../components/ui/StatusPill.jsx";
 import { useAuth } from "../context/useAuth";
-import AuthPromptActions from "../components/AuthPromptActions.jsx";
-import GameAverageRatingChip from "../components/GameAverageRatingChip.jsx";
-import "../styles/game-review.css";
-import { Chess } from "chess.js";
-import { buildTreeFromAnalysisJson } from "../utils/analysisTree";
+import { readPgnMetadata } from "../adapters/pgnMetadata";
+import { buildTreeFromAnalysisJson, buildTreeFromPgnWithComments } from "../utils/analysisTree";
 import { playMoveSoundForNode } from "../utils/moveSound";
 import { formatAuthorOutcomeLine } from "../utils/gameOutcome";
+import { getReviewEligibility } from "../utils/reviewEligibility";
+import { formatDate } from "../utils/time";
+import { metaLine } from "../utils/metaLine";
+// game-review.css styles the shared board, move list and notes components.
+import "../styles/game-review.css";
+import "../styles/game-detail.css";
 
-let detailNodeId = 10000;
+function hasComments(node) {
+  if (node.comment) return true;
+  return node.children.some(hasComments);
+}
 
-function buildTreeFromPgn(pgn, comments = []) {
-  function createNode(fen, san = null, parent = null) {
-    return {
-      id: `detail-${++detailNodeId}`,
-      fen,
-      san,
-      ply: parent ? parent.ply + 1 : 0,
-      comment: "",
-      parent,
-      children: [],
-    };
-  }
-
-  const commentMap = new Map();
-  for (const c of comments) {
-    commentMap.set(`${c.ply}:${c.san || ""}`, c.comment);
-  }
-
-  const root = createNode(new Chess().fen());
-  try {
-    const game = new Chess();
-    game.loadPgn(pgn);
-    const moves = game.history({ verbose: true });
-    let current = root;
-    const replay = new Chess(root.fen);
-    for (const move of moves) {
-      replay.move(move.san);
-      const child = createNode(replay.fen(), move.san, current);
-      const key = `${child.ply}:${child.san || ""}`;
-      if (commentMap.has(key)) child.comment = commentMap.get(key);
-      current.children.push(child);
-      current = child;
+/**
+ * Published games show the reviewer's tree and notes. Before publication the page shows
+ * the submitted moves only, so notes still being written are not presented as a review.
+ */
+function buildDetailTree(game) {
+  if (!game?.pgn) return null;
+  if (game.status === "completed") {
+    if (game.analysisTree) {
+      const fromJson = buildTreeFromAnalysisJson(game.analysisTree);
+      if (fromJson) return fromJson;
     }
-  } catch {
-    // Invalid PGN — return empty root
+    return buildTreeFromPgnWithComments(game.pgn, game.comments || []);
   }
-  return root;
+  return buildTreeFromPgnWithComments(game.pgn);
+}
+
+function playersLine(metadata) {
+  if (!metadata?.white || !metadata?.black) return null;
+  const white = metadata.whiteElo ? `${metadata.white} (${metadata.whiteElo})` : metadata.white;
+  const black = metadata.blackElo ? `${metadata.black} (${metadata.blackElo})` : metadata.black;
+  return `${white} vs ${black}`;
+}
+
+function useCopyLink() {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = window.setTimeout(() => setCopied(false), 2500);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
+  const copy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+    } catch {
+      window.prompt("Copy this link", window.location.href);
+    }
+  }, []);
+
+  return { copied, copy };
+}
+
+function NotesPlaceholder({ title, children }) {
+  return (
+    <Card className="bm-detail__notes">
+      <div className="bm-detail__notes-head">
+        <h2 className="bm-h3">Reviewer notes</h2>
+      </div>
+      <div className="bm-empty">
+        <p className="bm-h3">{title}</p>
+        <p className="bm-body">{children}</p>
+      </div>
+    </Card>
+  );
 }
 
 export default function GameDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { viewerId, user, isAuthenticated } = useAuth();
+  const { copied, copy } = useCopyLink();
 
   const { data: game, isLoading, isError } = useQuery({
     queryKey: ["game", id],
     queryFn: () => fetchGame(id),
   });
 
-  const root = useMemo(() => {
-    if (game?.analysisTree) {
-      const fromJson = buildTreeFromAnalysisJson(game.analysisTree);
-      if (fromJson) return fromJson;
-    }
-    if (!game?.pgn) return null;
-    return buildTreeFromPgn(game.pgn, game.comments || []);
-  }, [game]);
+  const root = useMemo(() => buildDetailTree(game), [game]);
+  const pgn = game?.pgn;
+  const metadata = useMemo(() => (pgn ? readPgnMetadata(pgn) : null), [pgn]);
 
   const [currentNode, setCurrentNode] = useState(null);
   const [sandboxFen, setSandboxFen] = useState(null);
   const [claimError, setClaimError] = useState("");
-  const [showClaimConfirm, setShowClaimConfirm] = useState(false);
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
   const activeNode = currentNode ?? root;
 
   const claimMutation = useMutation({
     mutationFn: claimReview,
     onSuccess: () => {
       setClaimError("");
-      setShowClaimConfirm(false);
+      setShowClaimDialog(false);
       queryClient.invalidateQueries({ queryKey: ["games"] });
       queryClient.invalidateQueries({ queryKey: ["game", id] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["home"] });
       navigate(`/review-game/${id}`, { replace: true });
     },
     onError: (err) => {
+      setShowClaimDialog(false);
       setClaimError(err.message || "Could not claim this game.");
+      // Refresh so a claim conflict shows who holds the game now.
+      queryClient.invalidateQueries({ queryKey: ["game", id] });
     },
   });
 
@@ -129,167 +162,214 @@ export default function GameDetail() {
     syncToGameNode(cur, true);
   }, [activeNode, root, syncToGameNode]);
 
-  const handleSelectNode = useCallback((node) => {
-    if (!node || node.id === activeNode?.id) return;
-    syncToGameNode(node, true);
-  }, [activeNode, syncToGameNode]);
+  const handleSelectNode = useCallback(
+    (node) => {
+      if (!node || node.id === activeNode?.id) return;
+      syncToGameNode(node, true);
+    },
+    [activeNode, syncToGameNode],
+  );
 
-  const handleBoardMove = useCallback((from, to, promotion = "q") => {
-    const startFen = sandboxFen || activeNode?.fen;
-    if (!startFen) return null;
+  const handleBoardMove = useCallback(
+    (from, to, promotion = "q") => {
+      const startFen = sandboxFen || activeNode?.fen;
+      if (!startFen) return null;
 
-    const gameForBoard = new Chess(startFen);
-    let move;
-    try {
-      move = gameForBoard.move({ from, to, promotion });
-    } catch {
-      return null;
-    }
-    if (!move) return null;
+      const gameForBoard = new Chess(startFen);
+      let move;
+      try {
+        move = gameForBoard.move({ from, to, promotion });
+      } catch {
+        return null;
+      }
+      if (!move) return null;
 
-    setSandboxFen(gameForBoard.fen());
-    playMoveSoundForNode({ san: move.san });
-    return { fen: gameForBoard.fen() };
-  }, [sandboxFen, activeNode]);
+      setSandboxFen(gameForBoard.fen());
+      playMoveSoundForNode({ san: move.san });
+      return { fen: gameForBoard.fen() };
+    },
+    [sandboxFen, activeNode],
+  );
 
   useKeyboardNav({ onFirst: goToFirst, onPrev: goToPrev, onNext: goToNext, onLast: goToLast });
 
   if (isLoading) {
     return (
-      <div className="review-container">
-        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Loading game…</p>
+      <div className="bm-detail">
+        <title>Boardmates | Game</title>
+        <p className="bm-body" role="status" aria-live="polite">
+          Loading game&hellip;
+        </p>
       </div>
     );
   }
 
   if (isError || !game || !root) {
     return (
-      <div className="review-container">
-        <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Game not found.</p>
+      <div className="bm-detail">
+        <title>Boardmates | Game not found</title>
+        <h1 className="bm-h1">Game not found</h1>
+        <Callout tone="neutral" title="We couldn’t open this game">
+          The link may be wrong, or the game may have been removed.
+        </Callout>
+        <div>
+          <Button as={Link} to="/" variant="secondary" size="sm">
+            Back to Home
+          </Button>
+        </div>
       </div>
     );
   }
 
   const authorName = game.author?.displayName ?? "Unknown";
   const reviewerName = game.reviewer?.displayName ?? null;
-  const title = game.title;
-  const subtitle = `${game.timeControl} · Submitted by ${authorName}`;
+  const isAuthor = Boolean(viewerId) && (game.authorId === viewerId || game.author?.id === viewerId);
+  const isAssignedReviewer = Boolean(viewerId) && game.reviewer?.id === viewerId;
+  const isPending = game.status === "pending";
+  const isInReview = game.status === "in_review";
+  const isCompleted = game.status === "completed";
+  const viewerRating = Number(user?.rapidRating);
+  const eligibility = getReviewEligibility({
+    viewerRapidRating: user?.rapidRating,
+    gameAverageRating: game.averageRating,
+    isPrivate: game.isPrivate,
+  });
+  const canClaim = isPending && isAuthenticated && !isAuthor && eligibility.canReview;
+  const blockedClaim = isPending && isAuthenticated && !isAuthor && !eligibility.canReview;
+  const question = String(game.reviewNotes ?? "").trim();
   const outcomeLine = formatAuthorOutcomeLine(game);
-  const isAuthor = viewerId && (game.authorId === viewerId || game.author?.id === viewerId);
-  const canClaimFromDetail = game.status === "pending" && !isAuthor;
-  const viewerRapidRating = Number(user?.rapidRating);
-  const gameAverageRating = Number(game.averageRating);
-  const hasViewerRating = Number.isFinite(viewerRapidRating) && viewerRapidRating > 0;
-  const hasGameAverageRating = Number.isFinite(gameAverageRating) && gameAverageRating > 0;
-  const minRequiredRating = hasGameAverageRating ? gameAverageRating + 200 : null;
-  const isPrivateGame = Boolean(game.isPrivate);
-  const isRatingEligible = isPrivateGame || (hasViewerRating && hasGameAverageRating && viewerRapidRating >= minRequiredRating);
-  const reviewEligibilityMessage = isPrivateGame
-    ? ""
-    : !hasViewerRating
-      ? "Set your chess account rating to review games."
-      : !hasGameAverageRating
-        ? "This game has no average rating yet."
-        : !isRatingEligible
-          ? `You need ${minRequiredRating}+ rapid to review this game.`
-          : "";
-  const showGuestClaimPrompt = canClaimFromDetail && !isAuthenticated;
-  const showClaimFlow = canClaimFromDetail && isAuthenticated && isRatingEligible;
+  const pageTitle = isCompleted ? "Reviewed Game" : "Game";
+  const justSubmitted = Boolean(location.state?.justSubmitted) && isAuthor;
+  const publishedHasNotes = isCompleted && hasComments(root);
+
+  const statusPill = isInReview ? (
+    <StatusPill status="in_review" label={reviewerName ? `Being reviewed by ${reviewerName}` : undefined} />
+  ) : isCompleted ? (
+    <StatusPill status="completed" />
+  ) : (
+    <StatusPill status="pending" />
+  );
 
   return (
-    <div className="review-container">
-      <title>Boardmates | Reviewed Game</title>
-      <div className="review-header">
-        <div>
-          <h2 className="review-title">{title}</h2>
-          <div className="review-subtitle-row">
-            <span className="review-subtitle">{subtitle}</span>
-            {isPrivateGame ? <span className="private-badge">Private</span> : null}
+    <div className="bm-detail">
+      <title>{`Boardmates | ${pageTitle}`}</title>
+
+      {justSubmitted ? (
+        <Callout tone="success" role="status" title="Game submitted">
+          {game.isPrivate
+            ? "It’s waiting for a reviewer. It isn’t listed publicly, so share this page’s link with a reviewer you’d like to ask."
+            : "It’s now in the list of games waiting for a reviewer."}
+        </Callout>
+      ) : null}
+
+      <header className="bm-detail__header">
+        <div className="bm-detail__heading">
+          <div className="bm-detail__pills">
+            {statusPill}
+            {game.isPrivate ? <StatusPill status="private" /> : null}
           </div>
-          <div className="review-header-rating-row">
-            <GameAverageRatingChip averageRating={game.averageRating} />
-          </div>
-          {outcomeLine ? <span className="review-outcome-note">{outcomeLine}</span> : null}
-          {claimError ? (
-            <p style={{ marginTop: 8, color: "var(--color-danger-soft-text, #b42318)", fontSize: 13 }}>
-              {claimError}
-            </p>
+          <h1 className="bm-h1 bm-detail__title">{game.title}</h1>
+          <p className="bm-detail__meta">
+            {metaLine(
+              game.timeControl,
+              game.averageRating ? `avg ${game.averageRating}` : null,
+              metadata ? `${metadata.moveCount} moves` : null,
+              `submitted by ${isAuthor ? "you" : authorName}`,
+              game.submittedAt ? formatDate(game.submittedAt) : null,
+              isCompleted && reviewerName ? `reviewed by ${reviewerName}` : null,
+            )}
+          </p>
+          {outcomeLine || playersLine(metadata) ? (
+            <p className="bm-detail__sub">{metaLine(outcomeLine, playersLine(metadata))}</p>
           ) : null}
         </div>
-        <div className="review-header-actions">
-          {showGuestClaimPrompt ? (
-            <div className="review-header-guest-claim">
-              <span className="review-header-guest-label">Review this game</span>
-              <AuthPromptActions signupFirst />
+
+        <div className="bm-detail__actions">
+          {isPending && !isAuthenticated ? (
+            <>
+              <Button as={Link} to="/login" state={{ from: location }} variant="primary">
+                Sign in to review
+              </Button>
+              <Button as={Link} to="/signup" state={{ from: location }} variant="tertiary" size="sm">
+                Create account
+              </Button>
+            </>
+          ) : null}
+          {canClaim ? (
+            <Button
+              variant="primary"
+              onClick={() => {
+                setClaimError("");
+                setShowClaimDialog(true);
+              }}
+              loading={claimMutation.isPending}
+              disabled={claimMutation.isPending}
+            >
+              {claimMutation.isPending ? "Claiming…" : "Review this game"}
+            </Button>
+          ) : null}
+          {blockedClaim ? (
+            <div className="bm-detail__blocked">
+              <Button variant="secondary" disabled aria-describedby="detail-claim-reason">
+                Review this game
+              </Button>
+              <p className="bm-meta" id="detail-claim-reason">
+                {eligibility.message}
+              </p>
             </div>
           ) : null}
-          {canClaimFromDetail && isAuthenticated && !isRatingEligible ? (
-            <p className="review-header-guest-label">{reviewEligibilityMessage}</p>
+          {isInReview && isAssignedReviewer ? (
+            <Button as={Link} to={`/review-game/${game.id}`} variant="primary">
+              Continue review
+            </Button>
           ) : null}
-          {showClaimFlow ? (
-            showClaimConfirm ? (
-              <div className="claim-confirm-inline">
-                <span className="confirm-text">Start review?</span>
-                <button
-                  type="button"
-                  className="confirm-yes-btn"
-                  onClick={() => claimMutation.mutate(game.id)}
-                  disabled={claimMutation.isPending}
-                  aria-label="Confirm review game"
-                  title="Confirm"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="confirm-no-btn"
-                  onClick={() => setShowClaimConfirm(false)}
-                  disabled={claimMutation.isPending}
-                  aria-label="Cancel review game"
-                  title="Cancel"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="complete-review-btn"
-                onClick={() => setShowClaimConfirm(true)}
-                disabled={claimMutation.isPending}
-              >
-                {claimMutation.isPending ? "Claiming…" : "Review Game"}
-              </button>
-            )
+          {isAuthor || isCompleted ? (
+            <Button variant="secondary" size="sm" onClick={copy}>
+              {copied ? "Link copied" : isAuthor && !isCompleted ? "Copy share link" : "Copy link"}
+            </Button>
           ) : null}
-          {reviewerName && (
-            <div className="reviewer-badge">
-              <span className="reviewer-dot" />
-              Reviewed by {reviewerName}
+          <span className="bm-visually-hidden" role="status" aria-live="polite">
+            {copied ? "Link copied to the clipboard" : ""}
+          </span>
+        </div>
+      </header>
+
+      {claimError ? (
+        <Callout tone="error" role="alert" title="We couldn’t claim this game">
+          {claimError}
+        </Callout>
+      ) : null}
+
+      {isPending && isAuthenticated && !isAuthor ? (
+        <div className="bm-detail__tiles">
+          {!game.isPrivate && eligibility.minRequired ? (
+            <div className="bm-stat">
+              <span className="bm-stat__label">Rating requirement</span>
+              <span className="bm-detail__tile-value bm-mono">{eligibility.minRequired}+ rapid</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {game.reviewNotes && (
-        <div className="review-notes-card">
-          <div className="review-notes-header">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            Submitter&rsquo;s Notes
+          ) : null}
+          {Number.isFinite(viewerRating) && viewerRating > 0 ? (
+            <div className="bm-stat">
+              <span className="bm-stat__label">Your rating</span>
+              <span className={`bm-detail__tile-value bm-mono ${eligibility.canReview ? "is-ok" : ""}`}>{viewerRating} rapid</span>
+            </div>
+          ) : null}
+          <div className="bm-stat">
+            <span className="bm-stat__label">To publish</span>
+            <span className="bm-detail__tile-value">At least 3 move notes</span>
           </div>
-          <p className="review-notes-text">{game.reviewNotes}</p>
         </div>
-      )}
+      ) : null}
 
-      <div className="review-grid">
-        <div className="left-column">
+      {question ? (
+        <Card className="bm-detail__question">
+          <span className="bm-overline">What {isAuthor ? "you want" : `${authorName} wants`} to understand</span>
+          <p className="bm-body bm-body--strong">{question}</p>
+        </Card>
+      ) : null}
+
+      <div className="bm-detail__grid">
+        <div className="bm-detail__board">
           <ChessBoard
             fen={sandboxFen || activeNode.fen}
             currentNode={activeNode}
@@ -300,20 +380,51 @@ export default function GameDetail() {
             onLast={goToLast}
             moveLabel={sandboxFen ? "Analysis board" : getMoveLabel(activeNode)}
           />
-          <MoveList
-            root={root}
-            currentNode={activeNode}
-            onSelectNode={handleSelectNode}
-          />
+          <MoveList root={root} currentNode={activeNode} onSelectNode={handleSelectNode} />
         </div>
-        <div className="right-column">
-          <CommentList
-            root={root}
-            currentNode={activeNode}
-            onSelectNode={handleSelectNode}
-          />
+
+        <div className="bm-detail__side">
+          {publishedHasNotes ? (
+            <CommentList root={root} currentNode={activeNode} onSelectNode={handleSelectNode} />
+          ) : isCompleted ? (
+            <NotesPlaceholder title="This review has no published notes">
+              Reviews completed before move notes were required can be empty. You can still play through the game.
+            </NotesPlaceholder>
+          ) : isInReview ? (
+            <NotesPlaceholder title={isAssignedReviewer ? "You’re reviewing this game" : "Review in progress"}>
+              {isAssignedReviewer
+                ? "Write and save your notes in the review workspace. They appear here once you publish."
+                : `${reviewerName ?? "A reviewer"} is writing notes on this game. They appear here once the review is published.`}
+            </NotesPlaceholder>
+          ) : isAuthor ? (
+            <NotesPlaceholder title="Nothing to read yet">
+              Your game is waiting for a reviewer. Their notes appear here once the review is published.
+            </NotesPlaceholder>
+          ) : canClaim ? (
+            <NotesPlaceholder title="No notes yet">
+              Claim the game to start writing notes. Publishing needs at least 3 move notes.
+            </NotesPlaceholder>
+          ) : blockedClaim ? (
+            <NotesPlaceholder title="Locked for review">
+              You can still play through the game and read the review once it’s published.
+            </NotesPlaceholder>
+          ) : (
+            <NotesPlaceholder title="No published notes yet">
+              This game is waiting for a reviewer. When one publishes, their notes appear here alongside the board.
+            </NotesPlaceholder>
+          )}
         </div>
       </div>
+
+      {showClaimDialog ? (
+        <ClaimDialog
+          game={game}
+          viewerRating={user?.rapidRating}
+          pending={claimMutation.isPending}
+          onConfirm={() => claimMutation.mutate(game.id)}
+          onClose={() => setShowClaimDialog(false)}
+        />
+      ) : null}
     </div>
   );
 }

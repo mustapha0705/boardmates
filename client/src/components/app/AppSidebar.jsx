@@ -2,8 +2,8 @@ import { createElement } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import BrandLogo from "../ui/BrandLogo.jsx";
-import { SidebarToggleIcon, SignOutIcon } from "./NavIcons.jsx";
-import { NAV_ITEMS, isActivePath } from "./navItems.js";
+import { SidebarToggleIcon, SignInIcon, SignOutIcon } from "./NavIcons.jsx";
+import { isActivePath, navItemsFor } from "./navItems.js";
 
 function initialOf(name) {
   return String(name ?? "").trim().charAt(0).toUpperCase() || "?";
@@ -12,7 +12,7 @@ function initialOf(name) {
 export default function AppSidebar({ collapsed, onToggleCollapse }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAuthenticated } = useAuth();
 
   async function handleSignOut() {
     await signOut();
@@ -43,7 +43,7 @@ export default function AppSidebar({ collapsed, onToggleCollapse }) {
       </div>
 
       <nav className="bm-sidebar__nav" aria-label="Main">
-        {NAV_ITEMS.map(({ to, label, Icon }) => {
+        {navItemsFor(isAuthenticated).map(({ to, label, Icon }) => {
           const active = isActivePath(location.pathname, to);
           return (
             <Link
@@ -64,22 +64,41 @@ export default function AppSidebar({ collapsed, onToggleCollapse }) {
 
       <div className="bm-sidebar__spacer" />
 
-      <div className="bm-sidebar__user">
-        {collapsed ? null : (
-          <>
-            <span className="bm-avatar bm-avatar--md" aria-hidden="true">
-              {initialOf(displayName)}
-            </span>
-            <span className="bm-sidebar__identity">
-              <span className="bm-sidebar__name">{displayName}</span>
-              {rating ? <span className="bm-sidebar__rating">{rating}</span> : null}
-            </span>
-          </>
-        )}
-        <button type="button" className="bm-sidebar__signout" onClick={handleSignOut} aria-label="Sign out" title="Sign out">
-          <SignOutIcon />
-        </button>
-      </div>
+      {isAuthenticated ? (
+        <div className="bm-sidebar__user">
+          {collapsed ? null : (
+            <>
+              <span className="bm-avatar bm-avatar--md" aria-hidden="true">
+                {initialOf(displayName)}
+              </span>
+              <span className="bm-sidebar__identity">
+                <span className="bm-sidebar__name">{displayName}</span>
+                {rating ? <span className="bm-sidebar__rating">{rating}</span> : null}
+              </span>
+            </>
+          )}
+          <button type="button" className="bm-sidebar__signout" onClick={handleSignOut} aria-label="Sign out" title="Sign out">
+            <SignOutIcon />
+          </button>
+        </div>
+      ) : (
+        <div className="bm-sidebar__user bm-sidebar__user--guest">
+          {collapsed ? (
+            <Link to="/login" state={{ from: location }} className="bm-sidebar__signout" aria-label="Sign in" title="Sign in">
+              <SignInIcon />
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" state={{ from: location }} className="bm-btn bm-btn--primary bm-btn--sm bm-btn--block">
+                Sign in
+              </Link>
+              <Link to="/signup" state={{ from: location }} className="bm-btn bm-btn--secondary bm-btn--sm bm-btn--block">
+                Create account
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

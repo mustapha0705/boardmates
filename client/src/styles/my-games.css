@@ -1,0 +1,12 @@
+/* My games, from the approved export's "My games" screen (search deferred). */
+
+.bm-my-games {
+  display: grid;
+  gap: var(--bm-space-7);
+  max-width: 1100px;
+}
+
+.bm-my-games__intro {
+  display: grid;
+  gap: var(--bm-space-2);
+}

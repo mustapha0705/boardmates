@@ -189,6 +189,8 @@
   line-height: 1.5;
 }
 .annotation-input:focus { border-color: var(--color-border-secondary); }
+/* Previously inherited from the global textarea rule in the retired submit-game.css. */
+textarea.annotation-input { min-height: 90px; }
 
 .comment-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .btn-primary {
@@ -351,6 +353,9 @@
   border: 1px solid var(--color-border-tertiary);
   border-radius: 12px;
   padding: 15px;
+  /* Previously inherited from the global .card rule in the retired submit-game.css. */
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .card-header {

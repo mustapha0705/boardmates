@@ -12,36 +12,6 @@
   flex-wrap: wrap;
 }
 
-.bm-home__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--bm-space-5);
-}
-.bm-stat {
-  display: grid;
-  gap: var(--bm-space-2);
-  background: var(--bm-surface);
-  border: 1px solid var(--bm-line);
-  border-radius: var(--bm-radius-lg);
-  padding: 15px 17px;
-}
-.bm-stat__label {
-  font-size: var(--bm-size-meta);
-  color: var(--bm-text-muted);
-}
-.bm-stat__value {
-  font-family: var(--bm-font-mono);
-  font-size: 24px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.bm-stat__value--accent {
-  color: var(--bm-approved);
-}
-.bm-stat__value--action {
-  color: var(--bm-action);
-}
-
 .bm-home__section {
   display: grid;
   gap: var(--bm-space-6);
@@ -102,42 +72,6 @@
   color: var(--bm-text-muted);
 }
 
-/* Compact rows (your games, recently reviewed) */
-.bm-rows {
-  display: grid;
-  gap: var(--bm-space-3);
-}
-.bm-row {
-  display: flex;
-  align-items: center;
-  gap: var(--bm-space-7);
-  padding: 13px 16px;
-}
-.bm-row__main {
-  flex: 1;
-  min-width: 0;
-}
-.bm-row__title {
-  font-size: 14px;
-  font-weight: 600;
-}
-.bm-row__meta {
-  margin-top: 3px;
-  font-family: var(--bm-font-mono);
-  font-size: var(--bm-size-meta);
-  color: var(--bm-text-muted);
-}
-.bm-row__aside {
-  font-size: 12px;
-  color: var(--bm-text-secondary);
-  white-space: nowrap;
-}
-
-.bm-home__more {
-  display: flex;
-  justify-content: center;
-}
-
 @media (max-width: 640px) {
   .bm-home {
     gap: var(--bm-space-9);
@@ -145,14 +79,6 @@
   .bm-queue {
     grid-template-columns: 1fr;
   }
-  .bm-row {
-    flex-wrap: wrap;
-    gap: var(--bm-space-4);
-  }
-  .bm-row__aside {
-    order: 3;
-  }
-  .bm-row .bm-btn,
   .bm-queue-card__actions .bm-btn {
     flex: 1 1 100%;
   }

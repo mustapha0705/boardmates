@@ -4,8 +4,8 @@ import AppSidebar from "./app/AppSidebar.jsx";
 import AppHeader from "./app/AppHeader.jsx";
 import MobileTabBar from "./app/MobileTabBar.jsx";
 import { titleForPath } from "./app/navItems.js";
-// layout.css still provides the legacy colour variables and styles used by the
-// signed-in pages that have not been redesigned yet (submit, profile, board pages).
+// layout.css still provides the legacy colour variables used by the reviewer workspace
+// and the shared board, move-list and notes components (game detail remaps them to tokens).
 import "../styles/layout.css";
 import "../styles/app-shell.css";
 

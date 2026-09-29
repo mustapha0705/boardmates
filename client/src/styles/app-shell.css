@@ -130,6 +130,7 @@
   min-width: 0;
 }
 .bm-sidebar__name {
+  display: block;
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
@@ -137,6 +138,7 @@
   text-overflow: ellipsis;
 }
 .bm-sidebar__rating {
+  display: block;
   margin-top: 2px;
   font-family: var(--bm-font-mono);
   font-size: 10.5px;
@@ -268,23 +270,21 @@
   }
 }
 
+/* Guest footer: sign-in actions replace the account block for signed-out visitors. */
+.bm-sidebar__user--guest {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--bm-space-3);
+}
+.bm-app__sidebar.is-collapsed .bm-sidebar__user--guest {
+  align-items: center;
+}
+
 /*
- * Transitional shim: the signed-in pages that UI-3 and UI-4 will redesign (submit,
- * profile, game detail, reviewer workspace) keep their own inner layout, but must not
- * repaint the page background or double the shell's padding. Each selector is removed
- * as its page is redesigned.
+ * Transitional shim: the reviewer workspace (UI-4) keeps its own inner layout, but must
+ * not double the shell's padding. Remove this when that page is redesigned.
  */
-.bm-app__content > .feed,
 .bm-app__content > .review-container {
   padding: 0;
   overflow: visible;
-}
-.bm-app__content .page,
-.bm-app__content .profile-page {
-  background: transparent;
-  min-height: 0;
-}
-.bm-app__content .container,
-.bm-app__content .profile-container {
-  padding: 0;
 }

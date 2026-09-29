@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import Button from "../ui/Button.jsx";
 
@@ -8,7 +8,8 @@ import Button from "../ui/Button.jsx";
  */
 export default function AppHeader({ title, showSubmitCta = false }) {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const location = useLocation();
+  const { signOut, isAuthenticated } = useAuth();
 
   async function handleSignOut() {
     await signOut();
@@ -24,15 +25,21 @@ export default function AppHeader({ title, showSubmitCta = false }) {
             Submit game
           </Button>
         ) : null}
-        <Button
-          type="button"
-          variant="tertiary"
-          size="sm"
-          className="bm-app__header-signout"
-          onClick={handleSignOut}
-        >
-          Sign out
-        </Button>
+        {isAuthenticated ? (
+          <Button
+            type="button"
+            variant="tertiary"
+            size="sm"
+            className="bm-app__header-signout"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </Button>
+        ) : (
+          <Button as={Link} to="/login" state={{ from: location }} variant="secondary" size="sm" className="bm-app__header-signin">
+            Sign in
+          </Button>
+        )}
       </div>
     </header>
   );

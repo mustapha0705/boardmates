@@ -108,6 +108,18 @@ export function PasswordField({ id: idProp, label, labelAside, hint, hintTone, c
   );
 }
 
+export function TextAreaField({ id: idProp, label, labelAside, hint, hintTone, className = "", ...textareaProps }) {
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
+  const classes = ["bm-input", "bm-textarea", className].filter(Boolean).join(" ");
+
+  return (
+    <FieldShell id={id} label={label} labelAside={labelAside} hint={hint} hintTone={hintTone}>
+      <textarea id={id} className={classes} aria-describedby={hint ? `${id}-hint` : undefined} {...textareaProps} />
+    </FieldShell>
+  );
+}
+
 export function SelectField({ id: idProp, label, hint, hintTone, children, className = "", ...selectProps }) {
   const generatedId = useId();
   const id = idProp ?? generatedId;
