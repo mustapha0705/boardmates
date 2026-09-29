@@ -137,7 +137,7 @@ export default function Profile() {
     <div className="feed">
       <title>Boardmates | Profile</title>
       <div className="profile-page">
-        <main className="profile-container">
+        <div className="profile-container">
           <section className="profile-header">
             <div className="avatar-circle">
               <span>{getInitial(displayName)}</span>
@@ -377,7 +377,7 @@ export default function Profile() {
               ) : null}
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

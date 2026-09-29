@@ -156,17 +156,17 @@ export default function GameDetail() {
 
   if (isLoading) {
     return (
-      <main className="review-container">
+      <div className="review-container">
         <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Loading game…</p>
-      </main>
+      </div>
     );
   }
 
   if (isError || !game || !root) {
     return (
-      <main className="review-container">
+      <div className="review-container">
         <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Game not found.</p>
-      </main>
+      </div>
     );
   }
 
@@ -197,7 +197,7 @@ export default function GameDetail() {
   const showClaimFlow = canClaimFromDetail && isAuthenticated && isRatingEligible;
 
   return (
-    <main className="review-container">
+    <div className="review-container">
       <title>Boardmates | Reviewed Game</title>
       <div className="review-header">
         <div>
@@ -314,6 +314,6 @@ export default function GameDetail() {
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }

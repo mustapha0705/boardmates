@@ -125,6 +125,8 @@
 
   /* Layout */
   --bm-content-max: 1180px;
+  --bm-sidebar-width: 244px;
+  --bm-sidebar-width-collapsed: 82px;
   --bm-form-max: 440px;
   --bm-header-height: 62px;
   --bm-page-pad-x: clamp(16px, 4vw, 28px);

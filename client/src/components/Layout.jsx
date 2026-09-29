@@ -1,40 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import Topbar from "./Topbar";
+import AppSidebar from "./app/AppSidebar.jsx";
+import AppHeader from "./app/AppHeader.jsx";
+import MobileTabBar from "./app/MobileTabBar.jsx";
+import { titleForPath } from "./app/navItems.js";
+// layout.css still provides the legacy colour variables and styles used by the
+// signed-in pages that have not been redesigned yet (submit, profile, board pages).
 import "../styles/layout.css";
+import "../styles/app-shell.css";
 
 export default function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
-  // Close mobile sidebar on route change
-  // useEffect(() => {
-  //   setMobileOpen(false);
-  // }, [location]);
-  useEffect(() => {
-  const id = setTimeout(() => setMobileOpen(false), 0);
-  return () => clearTimeout(id);
-}, [location]);
-
   return (
-    <div className="layout">
-      {/* Overlay backdrop */}
-      {mobileOpen && (
-        <div className="sidebar-backdrop" onClick={() => setMobileOpen(false)} />
-      )}
+    <div className="bm-app">
+      <a className="bm-skip-link" href="#app-content">
+        Skip to main content
+      </a>
 
-      <Sidebar
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-      />
+      <AppSidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed((value) => !value)} />
 
-      <div className="main">
-        <Topbar onMenuClick={() => setMobileOpen(true)} />
-        {children ?? <Outlet />}
+      <div className="bm-app__main">
+        <AppHeader title={titleForPath(location.pathname)} showSubmitCta={!location.pathname.startsWith("/submit")} />
+
+        <main id="app-content" className="bm-app__content">
+          {children ?? <Outlet />}
+        </main>
+
+        <MobileTabBar />
       </div>
     </div>
   );

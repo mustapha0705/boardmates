@@ -1,12 +1,12 @@
 import { useAuth } from "../context/useAuth";
 import Layout from "../components/Layout.jsx";
-import Feed from "../pages/Feed.jsx";
+import Home from "../pages/Home.jsx";
 import Landing from "../pages/Landing.jsx";
 import BrandLogo from "../components/ui/BrandLogo.jsx";
 
 /**
- * `/` keeps its URL: signed-out visitors get the redesigned landing page,
- * signed-in users get the existing feed inside the app shell.
+ * `/` keeps its URL: signed-out visitors get the landing page, signed-in users get
+ * the Home dashboard inside the application shell.
  */
 export default function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -23,7 +23,7 @@ export default function HomeRoute() {
   if (isAuthenticated) {
     return (
       <Layout>
-        <Feed />
+        <Home />
       </Layout>
     );
   }

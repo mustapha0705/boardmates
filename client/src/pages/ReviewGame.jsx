@@ -222,18 +222,18 @@ function ReviewGameInner({
 
   if (!tree.root) {
     return (
-      <main className="review-container">
+      <div className="review-container">
         <title>Boardmates | Review Game</title>
         {header}
         <p className="review-preparing-msg" role="status" aria-live="polite">
           Preparing board…
         </p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="review-container">
+    <div className="review-container">
       <title>Boardmates | Review Game</title>
       {header}
 
@@ -280,7 +280,7 @@ function ReviewGameInner({
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -329,17 +329,17 @@ export default function ReviewGame() {
 
   if (isLoading) {
     return (
-      <main className="review-container">
+      <div className="review-container">
         <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Loading game…</p>
-      </main>
+      </div>
     );
   }
 
   if (isError || !game) {
     return (
-      <main className="review-container">
+      <div className="review-container">
         <p style={{ color: "var(--color-text-tertiary)", padding: 40 }}>Game not found.</p>
-      </main>
+      </div>
     );
   }
 

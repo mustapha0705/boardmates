@@ -147,7 +147,7 @@ export default function SubmitGame() {
     <div className="feed">
       <title>Boardmates | Submit Game</title>
       <div className="page">
-        <main className="container">
+        <div className="container">
           <div className="title-section">
             <h1>Submit Game</h1>
             <p>Submit your game and get a human review.</p>
@@ -522,7 +522,7 @@ export default function SubmitGame() {
               </>
             )}
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
